@@ -1,9 +1,0 @@
-/bin/
-/.gradle/
-/.settings/
-/build/
-
-.project
-.classpath
-gradle.properties
-secret-keys.*
