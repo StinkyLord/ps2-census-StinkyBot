@@ -1,4 +1,4 @@
-# ps2-census-StinkyBot
+# StinkyBot
 
 Forked from LuiZiffer/ps2-census
 
