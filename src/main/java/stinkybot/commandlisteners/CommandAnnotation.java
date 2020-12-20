@@ -1,4 +1,4 @@
-package stinkybot.utils;
+package stinkybot.commandlisteners;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

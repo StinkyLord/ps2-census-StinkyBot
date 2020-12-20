@@ -2,7 +2,8 @@ package stinkybot.commandlisteners;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import stinkybot.utils.CommandAnnotation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import stinkybot.utils.daybreakutils.anatomy.Constants;
 import stinkybot.apiQuery.DaybreakApiQuery;
 import stinkybot.utils.daybreakutils.query.dto.ICensusCollection;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 @CommandAnnotation
 public class CommandTopWeapon implements CommandInterface {
-
+    private static final Logger logger = LoggerFactory.getLogger(CommandTopWeapon.class);
     @Override
     public String getName() {
         return "topw";
@@ -73,7 +74,7 @@ public class CommandTopWeapon implements CommandInterface {
                     "\n" + "KD: " + String.format("%.02f", kd));
             event.getChannel().sendMessage(ebInfo2.build()).queue();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.warn("CommandTopWeapon - ", e);
         }
     }
 }
