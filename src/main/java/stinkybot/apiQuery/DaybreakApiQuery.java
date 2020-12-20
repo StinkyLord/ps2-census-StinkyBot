@@ -1,4 +1,4 @@
-package stinkybot.utils.daybreakutils.apiQuery;
+package stinkybot.apiQuery;
 
 import stinkybot.utils.daybreakutils.Join;
 import stinkybot.utils.daybreakutils.Query;

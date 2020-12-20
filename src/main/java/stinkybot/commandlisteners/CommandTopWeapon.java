@@ -4,7 +4,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import stinkybot.utils.CommandAnnotation;
 import stinkybot.utils.daybreakutils.anatomy.Constants;
-import stinkybot.utils.daybreakutils.apiQuery.DaybreakApiQuery;
+import stinkybot.apiQuery.DaybreakApiQuery;
 import stinkybot.utils.daybreakutils.query.dto.ICensusCollection;
 import stinkybot.utils.daybreakutils.query.dto.internal.CharactersWeaponStat;
 import stinkybot.utils.daybreakutils.query.dto.internal.CharactersWeaponStatByFaction;
