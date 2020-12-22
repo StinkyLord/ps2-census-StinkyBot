@@ -34,7 +34,7 @@ public class DaybreakApiQuery {
         return (Character) list.get(0);
     }
 
-    public static CharactersWeaponStat getPlayerTopWeaponKillsByName(String name) throws IOException, CensusInvalidSearchTermException {
+	public static CharactersWeaponStat getPlayerTopWeaponKillsByName(String name) throws IOException, CensusInvalidSearchTermException {
         String characterId = getPlayerIdByName(name);
         if (characterId == null) {
             return null;
@@ -42,7 +42,8 @@ public class DaybreakApiQuery {
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId)
                 .filter("character_id", characterId)
                 .filter("stat_name", "weapon_score")
-                .filter("item_id", SearchModifier.NOT, "0","650","432","44605","429","800623","1095","881")
+                .filter("item_id", SearchModifier.NOT,"0","650","432","44605","429","800623","1095"
+                		,"881","6008686","50560","34002","85","16031","804652","804179")
                 .filter("vehicle_id", "0")
                 .sort(new Pair<>("value", -1))
                 .join(new Join(Collection.ITEM).on("item_id"))
