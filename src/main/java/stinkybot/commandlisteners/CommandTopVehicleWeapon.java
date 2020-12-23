@@ -92,11 +92,17 @@ public class CommandTopVehicleWeapon implements CommandInterface {
         float totalKillCount = killVehicleCount + killCount;
         CharactersWeaponStat playerVehicleDeaths = DaybreakApiQuery.getPLayerVehicleWeaponDeaths(
                 weaponScore.getCharacter_id(), item.getItem_id(), vehicle.getVehicle_id());
-        if (playerVehicleDeaths == null) {
-            throw new NullPointerException();
+        float deathCount = 1;
+
+        if (playerVehicleDeaths != null) {
+            deathCount = Float.parseFloat(playerVehicleDeaths.getValue());
         }
-        float deathCount = Float.parseFloat(playerVehicleDeaths.getValue());
+
         float kd = totalKillCount / deathCount;
+        if (deathCount == 1) {
+            kd=1;
+        }
+
         EmbedBuilder ebInfo2 = new EmbedBuilder();
         ebInfo2.setColor(0xff3923);
         ebInfo2.setTitle("Top Vehicle Weapon of Player: " + playerName2);
