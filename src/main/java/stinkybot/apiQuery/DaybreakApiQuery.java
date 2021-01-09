@@ -1,5 +1,6 @@
 package stinkybot.apiQuery;
 
+import stinkybot.utils.SettingsReader;
 import stinkybot.utils.daybreakutils.Join;
 import stinkybot.utils.daybreakutils.Query;
 import stinkybot.utils.daybreakutils.anatomy.Collection;
@@ -16,7 +17,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DaybreakApiQuery {
-    public static final String serviceId = System.getenv("CENSUS_SERVICE_ID");
+
+    public static final String serviceId = SettingsReader.getInstance().getSettings().getDaybreakServiceId();
 
     public static int getRegionCount(String worldId, String zoneId) throws CensusInvalidSearchTermException, IOException {
         Query q = new Query(Collection.MAP, serviceId).filter("world_id", worldId).filter("zone_ids", zoneId);

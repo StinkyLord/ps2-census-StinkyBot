@@ -2,7 +2,7 @@ package stinkybot.utils.discordutils;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-
+import stinkybot.utils.SettingsReader;
 
 import javax.security.auth.login.LoginException;
 
@@ -14,7 +14,8 @@ public class JDAConnector {
     private static final Object lock = new Object();
 
     private JDAConnector() {
-        String token = System.getenv().get("STINKY_BOT_TOKEN");
+    	SettingsReader sr = SettingsReader.getInstance();
+        String token = sr.getSettings().getBotToken();
         try {
             jda = JDABuilder.createDefault(token).build();
         } catch (LoginException e) {
