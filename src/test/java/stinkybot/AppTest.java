@@ -3,22 +3,23 @@ package stinkybot;
 import net.dv8tion.jda.api.EmbedBuilder;
 import org.junit.Ignore;
 import org.junit.Test;
-import stinkybot.commandlisteners.CommandTopVehicleWeapon;
+import stinkybot.apiQuery.DaybreakApiQuery;
+import stinkybot.commandlisteners.CommandDirectiveScore;
 import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
-/**
- * Unit test for simple App.
- */
 public class AppTest 
 {
-    /**
-     * Rigorous Test :-)
-     */
     @Ignore
     @Test
-    public void shouldAnswerWithTrue() throws IOException, CensusInvalidSearchTermException {
-        EmbedBuilder daybreakInfo = new CommandTopVehicleWeapon().getDaybreakInfo(new String[]{"topv", "samreeves"});
+    public void shouldAnswerWithTrue() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        CommandDirectiveScore instance = new CommandDirectiveScore();
+        Method method = CommandDirectiveScore.class.getDeclaredMethod("getDaybreakInfo", String.class);
+        method.setAccessible(true);
+        EmbedBuilder eb = (EmbedBuilder)method.invoke(instance,"STINKYBULLET");
+        eb.build();
     }
 }

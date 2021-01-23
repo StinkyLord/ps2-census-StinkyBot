@@ -17,12 +17,18 @@ import stinkybot.utils.daybreakutils.query.dto.internal.Vehicle;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @CommandAnnotation
 public class CommandTopVehicleWeapon implements CommandInterface {
+    private static final Object LOCK = new Object();
+
+
+    // creates one single instance of the class
+
 
     private static final Logger logger = LoggerFactory.getLogger(CommandTopVehicleWeapon.class);
     File file;
@@ -44,10 +50,14 @@ public class CommandTopVehicleWeapon implements CommandInterface {
                 event.getChannel().sendMessage("topv requires player name as second argument").queue();
                 return;
             }
-            EmbedBuilder ebInfo2 = getDaybreakInfo(args);
-            if (ebInfo2 != null && file != null) {
-                event.getChannel().sendMessage(ebInfo2.build()).queue();
-                event.getChannel().sendFile(file).queue();
+
+            synchronized (LOCK) {
+                EmbedBuilder ebInfo2 = getDaybreakInfo(args);
+                if (ebInfo2 != null && file != null) {
+                    event.getChannel().sendMessage(ebInfo2.build()).queue();
+                    event.getChannel().sendFile(file).queue();
+                    Files.deleteIfExists(file.toPath());
+                }
             }
         } catch (Exception e) {
             logger.warn("CommandTopVehicleWeapon - ", e);
@@ -67,7 +77,6 @@ public class CommandTopVehicleWeapon implements CommandInterface {
         String weaponImage = Constants.CENSUS_ENDPOINT.toString() + item.getImage_path();
         String vehicleImage = Constants.CENSUS_ENDPOINT.toString() + vehicle.getImage_path();
         String vehicleName = vehicle.getName().getEn();
-//        String vehicleDesc = vehicle.getDescription().getEn();
         String weaponName = item.getName().getEn();
         String weaponDesc = item.getDescription().getEn();
         file = JoinImage.joinImages(vehicleImage, weaponImage);
@@ -100,7 +109,7 @@ public class CommandTopVehicleWeapon implements CommandInterface {
 
         float kd = totalKillCount / deathCount;
         if (deathCount == 1) {
-            kd=1;
+            kd = 1;
         }
 
         EmbedBuilder ebInfo2 = new EmbedBuilder();

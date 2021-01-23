@@ -48,7 +48,7 @@ public class CommandTopWeapon implements CommandInterface {
         }
     }
 
-    public EmbedBuilder getDaybreakInfo(String[] args) throws IOException, CensusInvalidSearchTermException {
+    private EmbedBuilder getDaybreakInfo(String[] args) throws IOException, CensusInvalidSearchTermException {
         String playerName2 = args[1];
 
         CharactersWeaponStat weaponScore = DaybreakApiQuery.getPlayerTopWeaponKillsByName(playerName2);
