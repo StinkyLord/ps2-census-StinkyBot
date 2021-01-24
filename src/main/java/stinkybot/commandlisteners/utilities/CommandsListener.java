@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import stinkybot.commandlisteners.CommandHelp;
 
 import java.lang.reflect.Constructor;
 import java.util.Set;
@@ -20,7 +21,7 @@ public class CommandsListener extends ListenerAdapter {
         if (args.length > 2 || !args[0].startsWith(PREFIX)) {
             return;
         }
-        String commandAbstractFullName = CommandInterface.class.getPackage().getName();
+        String commandAbstractFullName = CommandHelp.class.getPackage().getName();
         Set<Class<?>> commandClasses = new Reflections(commandAbstractFullName).getTypesAnnotatedWith(CommandAnnotation.class, true);
 
         for (Class<?> commandClass : commandClasses) {
