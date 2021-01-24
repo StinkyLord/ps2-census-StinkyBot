@@ -24,7 +24,7 @@ public class CommandHelp implements CommandInterface {
 
     @Override
     public void run(GuildMessageReceivedEvent event, String[] args) {
-        String commandAbstractFullName = CommandInterface.class.getPackage().getName();
+        String commandAbstractFullName = CommandHelp.class.getPackage().getName();
         Set<Class<?>> commandClasses = new Reflections(commandAbstractFullName).getTypesAnnotatedWith(CommandAnnotation.class, true);
         StringBuilder sb = new StringBuilder();
         for (Class<?> commandClass : commandClasses) {
