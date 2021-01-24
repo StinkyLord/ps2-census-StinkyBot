@@ -5,6 +5,8 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import stinkybot.apiQuery.DaybreakApiQuery;
+import stinkybot.commandlisteners.utilities.CommandAnnotation;
+import stinkybot.commandlisteners.utilities.CommandInterface;
 import stinkybot.utils.QueryConstants;
 import stinkybot.utils.daybreakutils.anatomy.Constants;
 import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;

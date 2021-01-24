@@ -5,6 +5,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import stinkybot.apiQuery.DaybreakApiQuery;
 import stinkybot.commandlisteners.CommandDirectiveScore;
+import stinkybot.commandlisteners.CommandStats;
 import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
 
 import java.io.IOException;
@@ -16,8 +17,8 @@ public class AppTest
     @Ignore
     @Test
     public void shouldAnswerWithTrue() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        CommandDirectiveScore instance = new CommandDirectiveScore();
-        Method method = CommandDirectiveScore.class.getDeclaredMethod("getDaybreakInfo", String.class);
+        CommandStats instance = new CommandStats();
+        Method method = CommandStats.class.getDeclaredMethod("getDaybreakInfo", String.class);
         method.setAccessible(true);
         EmbedBuilder eb = (EmbedBuilder)method.invoke(instance,"STINKYBULLET");
         eb.build();

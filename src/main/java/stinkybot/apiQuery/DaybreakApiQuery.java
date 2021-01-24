@@ -1,5 +1,6 @@
 package stinkybot.apiQuery;
 
+import stinkybot.commandlisteners.utilities.CC;
 import stinkybot.utils.SettingsReader;
 import stinkybot.utils.daybreakutils.Join;
 import stinkybot.utils.daybreakutils.Query;
@@ -13,9 +14,7 @@ import stinkybot.utils.daybreakutils.query.dto.internal.*;
 import stinkybot.utils.daybreakutils.tree.Pair;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,13 +44,13 @@ public class DaybreakApiQuery {
             return null;
         }
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId)
-                .filter("character_id", characterId)
+                .filter(CC.CHARACTER_ID, characterId)
                 .filter("stat_name", "weapon_score")
-                .filter("item_id", SearchModifier.NOT, "0", "650", "432", "44605", "429", "800623", "1095"
+                .filter(CC.ITEM_ID, SearchModifier.NOT, "0", "650", "432", "44605", "429", "800623", "1095"
                         , "881", "6008686", "50560", "34002", "85", "16031", "804652", "804179")
                 .filter("vehicle_id", "0")
                 .sort(new Pair<>("value", -1))
-                .join(new Join(Collection.ITEM).on("item_id"))
+                .join(new Join(Collection.ITEM).on(CC.ITEM_ID))
                 .getAndParse();
         if (list == null || list.isEmpty() || !(list.get(0) instanceof CharactersWeaponStat)) {
             return null;
@@ -66,13 +65,13 @@ public class DaybreakApiQuery {
 
     public static CharactersWeaponStat getPlayerTopVehicleWeaponKillsByName(String name) throws IOException, CensusInvalidSearchTermException {
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId)
-                .filter("character_id", getPlayerIdByName(name))
+                .filter(CC.CHARACTER_ID, getPlayerIdByName(name))
                 .filter("stat_name", "weapon_score")
-                .filter("item_id", SearchModifier.NOT, "0")
+                .filter(CC.ITEM_ID, SearchModifier.NOT, "0")
                 .filter("vehicle_id", SearchModifier.NOT, "0")
                 .sort(new Pair<>("value", -1))
                 .join(new Join(Collection.VEHICLE).on("vehicle_id"))
-                .join(new Join(Collection.ITEM).on("item_id"))
+                .join(new Join(Collection.ITEM).on(CC.ITEM_ID))
                 .getAndParse();
         if (list == null || list.isEmpty() || !(list.get(0) instanceof CharactersWeaponStat)) {
             return null;
@@ -85,36 +84,47 @@ public class DaybreakApiQuery {
         return (CharactersWeaponStat) list.get(0);
     }
 
-    public static CharactersWeaponStat test(String name) throws IOException, CensusInvalidSearchTermException {
-        List<ICensusCollection> list = new Query(Collection.CHARACTERS_DIRECTIVE_TREE, serviceId).filter("character_id", getPlayerIdByName("StinkyBullet"))
-                .join(new Join(Collection.DIRECTIVE_TREE).on("directive_tree_id").list(1))
-                .join(new Join(Collection.DIRECTIVE_TIER).on("directive_tree_id").list(1))
-                .limit(10000)
+    public static Character test(String playerName) throws IOException, CensusInvalidSearchTermException {
+        List<ICensusCollection> list = new Query(Collection.CHARACTER, serviceId)
+                .filter("name.first_lower", playerName.toLowerCase())
+                .join(new Join(Collection.CHARACTERS_DIRECTIVE_TREE).on(CC.CHARACTER_ID).list(1).inject_at("directive_tree"))
+                .join(new Join(Collection.CHARACTERS_STAT).on(CC.CHARACTER_ID).list(1).inject_at("stat"))
+                .join(new Join(Collection.CHARACTERS_STAT_BY_FACTION).on(CC.CHARACTER_ID).list(1).inject_at("stat_by_faction"))
+                .join(new Join(Collection.CHARACTERS_WEAPON_STAT).on(CC.CHARACTER_ID).list(1).inject_at("weapon_stat"))
+                .join(new Join(Collection.CHARACTERS_WEAPON_STAT_BY_FACTION).on(CC.CHARACTER_ID).list(1).inject_at("weapon_stat_by_Faction"))
                 .getAndParse();
-        //new Query(Collection.CHARACTERS_DIRECTIVE_TREE, serviceId).filter("character_id", getPlayerIdByName(name)).limit(100)
-//        .join(new Join(Collection.CHARACTERS_STAT).on("character_id").list(1))
-//        .join(new Join(Collection.CHARACTERS_STAT_BY_FACTION).on("character_id").list(1))
-//        .join(new Join(Collection.CHARACTERS_DIRECTIVE_TREE).on("character_id").list(1))
-//        .join(new Join(Collection.DIRECTIVE).on("directive_Id").list(1))
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        return (Character) list.get(0);
+    }
 
-//        .join(new Join(Collection.CHARACTERS_WEAPON_STAT).on("character_id").list(1))
-//        .join(new Join(Collection.CHARACTERS_WEAPON_STAT_BY_FACTION).on("character_id").list(1))
-//        .getAndParse();
-        if (list == null || list.isEmpty() || !(list.get(0) instanceof CharactersWeaponStat)) {
+    public static Character getCharacterStatistics(String playerName) throws IOException, CensusInvalidSearchTermException {
+        List<ICensusCollection> list = new Query(Collection.CHARACTER, serviceId)
+                .filter("name.first_lower", playerName.toLowerCase())
+                .join(new Join(Collection.CHARACTERS_DIRECTIVE_TREE).on(CC.CHARACTER_ID).list(1).inject_at(CC.DIRECTIVE_TREE)
+                        .show(CC.DIRECTIVE_TREE_ID, CC.CURRENT_DIRECTIVE_TIER_ID)
+                        .join(new Join(Collection.DIRECTIVE_TIER).on(CC.DIRECTIVE_TREE_ID).list(1).inject_at(CC.TIER)
+                                .show(CC.DIRECTIVE_POINTS, CC.DIRECTIVE_TIER_ID)))
+                .join(new Join(Collection.CHARACTERS_STAT).on(CC.CHARACTER_ID).list(1).inject_at(CC.STAT)
+                        .show(CC.STAT_NAME, CC.VALUE_FOREVER, CC.PROFILE_ID))
+                .join(new Join(Collection.CHARACTERS_STAT_BY_FACTION).on(CC.CHARACTER_ID).list(1).inject_at(CC.STAT_BY_FACTION)
+                        .show(CC.STAT_NAME, CC.VALUE_FOREVER_NC, CC.VALUE_FOREVER_TR, CC.VALUE_FOREVER_VS))
+                .join(new Join(Collection.CHARACTERS_WEAPON_STAT).on(CC.CHARACTER_ID).list(1).inject_at(CC.WEAPON_STAT)
+                .show(CC.ITEM_ID, CC.STAT_NAME, CC.VALUE).terms(new Pair<>(CC.ITEM_ID,"!0")))
+                .join(new Join(Collection.CHARACTERS_WEAPON_STAT_BY_FACTION).on(CC.CHARACTER_ID).list(1).inject_at(CC.WEAPON_STAT_BY_FACTION)
+                        .show(CC.ITEM_ID,CC.STAT_NAME,CC.VALUE_VS,CC.VALUE_NC, CC.VALUE_TR).terms(new Pair<>(CC.ITEM_ID,"!0")))
+                .getAndParse();
+        if (list == null || list.isEmpty()) {
             return null;
         }
-        CharactersWeaponStat charactersWeaponStat = (CharactersWeaponStat) list.get(0);
-        List<ICensusCollection> nested = charactersWeaponStat.getNested();
-        if (nested == null || nested.isEmpty() || !(nested.get(0) instanceof Vehicle) || !(nested.get(1) instanceof Item)) {
-            return null;
-        }
-        return (CharactersWeaponStat) list.get(0);
+        return (Character) list.get(0);
     }
 
 
     public static List<CharactersDirectiveTree> getDirectiveTreeByCharacterName(String name) throws IOException, CensusInvalidSearchTermException {
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_DIRECTIVE_TREE, serviceId)
-                .filter("character_id", getPlayerIdByName(name))
+                .filter(CC.CHARACTER_ID, getPlayerIdByName(name))
                 .join(new Join(Collection.DIRECTIVE_TIER).on("directive_tree_id").list(1))
                 .limit(1000)
                 .getAndParse();
@@ -129,9 +139,10 @@ public class DaybreakApiQuery {
         });
         return list1;
     }
+
     public static List<CharactersDirectiveTier> getDirectiveTierByCharacterName(String name) throws IOException, CensusInvalidSearchTermException {
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_DIRECTIVE_TIER, serviceId)
-                .filter("character_id", getPlayerIdByName(name))
+                .filter(CC.CHARACTER_ID, getPlayerIdByName(name))
                 .limit(10000)
                 .getAndParse();
 
@@ -164,8 +175,8 @@ public class DaybreakApiQuery {
 
     public static List<ICensusCollection> getPLayerWeaponStats(String characterId, String weaponId) throws IOException, CensusInvalidSearchTermException {
         List<ICensusCollection> list2 = new Query(Collection.CHARACTERS_WEAPON_STAT_BY_FACTION, serviceId)
-                .filter("character_id", characterId)
-                .filter("item_id", weaponId)
+                .filter(CC.CHARACTER_ID, characterId)
+                .filter(CC.ITEM_ID, weaponId)
                 .filter("vehicle_id", "0").limit(10).getAndParse();
         if (list2 == null || list2.isEmpty() || !(list2.get(0) instanceof CharactersWeaponStatByFaction)) {
             return null;
@@ -175,8 +186,8 @@ public class DaybreakApiQuery {
 
     public static List<ICensusCollection> getPLayerVehicleWeaponStats(String characterId, String weaponId, String vehicle_id) throws IOException, CensusInvalidSearchTermException {
         List<ICensusCollection> list2 = new Query(Collection.CHARACTERS_WEAPON_STAT_BY_FACTION, serviceId)
-                .filter("character_id", characterId)
-                .filter("item_id", weaponId)
+                .filter(CC.CHARACTER_ID, characterId)
+                .filter(CC.ITEM_ID, weaponId)
                 .filter("vehicle_id", vehicle_id).limit(10).getAndParse();
         if (list2 == null || list2.isEmpty() || !(list2.get(0) instanceof CharactersWeaponStatByFaction)) {
             return null;
@@ -186,9 +197,9 @@ public class DaybreakApiQuery {
 
     public static CharactersWeaponStat getPLayerWeaponDeaths(String characterId, String weaponId) throws IOException, CensusInvalidSearchTermException {
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId)
-                .filter("character_id", characterId)
+                .filter(CC.CHARACTER_ID, characterId)
                 .filter("stat_name", "weapon_deaths")
-                .filter("item_id", weaponId)
+                .filter(CC.ITEM_ID, weaponId)
                 .filter("vehicle_id", "0").getAndParse();
         if (list == null || list.isEmpty() || !(list.get(0) instanceof CharactersWeaponStat)) {
             return null;
@@ -199,9 +210,9 @@ public class DaybreakApiQuery {
 
     public static CharactersWeaponStat getPLayerVehicleWeaponDeaths(String characterId, String weaponId, String vehicleId) throws IOException, CensusInvalidSearchTermException {
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId)
-                .filter("character_id", characterId)
+                .filter(CC.CHARACTER_ID, characterId)
                 .filter("stat_name", "weapon_deaths")
-                .filter("item_id", weaponId)
+                .filter(CC.ITEM_ID, weaponId)
                 .filter("vehicle_id", vehicleId).getAndParse();
         if (list == null || list.isEmpty() || !(list.get(0) instanceof CharactersWeaponStat)) {
             return null;
@@ -210,7 +221,7 @@ public class DaybreakApiQuery {
     }
 
     public static Character getPlayerById(String id) throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.CHARACTER, serviceId).filter("character_id", id);
+        Query q = new Query(Collection.CHARACTER, serviceId).filter(CC.CHARACTER_ID, id);
         List<ICensusCollection> list = q.getAndParse();
 
         if (list == null || list.isEmpty()) {
@@ -220,7 +231,7 @@ public class DaybreakApiQuery {
     }
 
     public static List<Character> getPlayersById(String... ids) throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.CHARACTER, serviceId).filter("character_id", ids).limit(ids.length);
+        Query q = new Query(Collection.CHARACTER, serviceId).filter(CC.CHARACTER_ID, ids).limit(ids.length);
         List<ICensusCollection> list = q.getAndParse();
 
         if (list == null || list.isEmpty()) {
@@ -231,7 +242,7 @@ public class DaybreakApiQuery {
 
     public static List<OutfitMemberExtended> getMemberDataById(String... ids)
             throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.OUTFIT_MEMBER_EXTENDED, serviceId).filter("character_id", ids).limit(ids.length);
+        Query q = new Query(Collection.OUTFIT_MEMBER_EXTENDED, serviceId).filter(CC.CHARACTER_ID, ids).limit(ids.length);
         List<ICensusCollection> list = q.getAndParse();
 
         if (list == null || list.isEmpty()) {
@@ -241,7 +252,7 @@ public class DaybreakApiQuery {
     }
 
     public static String getPlayerNameById(String id) throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.CHARACTER, serviceId).filter("character_id", id).show("name.first");
+        Query q = new Query(Collection.CHARACTER, serviceId).filter(CC.CHARACTER_ID, id).show("name.first");
         List<ICensusCollection> list = q.getAndParse();
 
         if (list == null || list.isEmpty()) {
@@ -252,7 +263,7 @@ public class DaybreakApiQuery {
 
     public static List<String> getPlayerIdsByNames(String... names)
             throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.CHARACTER, serviceId).show("character_id").limit(names.length);
+        Query q = new Query(Collection.CHARACTER, serviceId).show(CC.CHARACTER_ID).limit(names.length);
         for (String name : names) {
             q.filter("name.first_lower", name.toLowerCase());
         }
@@ -266,7 +277,7 @@ public class DaybreakApiQuery {
 
     public static String getPlayerIdByName(String name) throws CensusInvalidSearchTermException, IOException {
         Query q = new Query(Collection.CHARACTER, serviceId).filter("name.first_lower", name.toLowerCase())
-                .show("character_id");
+                .show(CC.CHARACTER_ID);
         List<ICensusCollection> list = q.getAndParse();
 
         if (list == null || list.isEmpty()) {
@@ -316,7 +327,7 @@ public class DaybreakApiQuery {
     }
 
     public static String getOutfitMemberRankById(String id) throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.OUTFIT_MEMBER, serviceId).filter("character_id", id).show("rank");
+        Query q = new Query(Collection.OUTFIT_MEMBER, serviceId).filter(CC.CHARACTER_ID, id).show("rank");
         List<ICensusCollection> list = q.getAndParse();
 
         if (list == null || list.isEmpty()) {
@@ -345,8 +356,8 @@ public class DaybreakApiQuery {
 
     public static String getOutfitTagOfMember(String name) throws CensusInvalidSearchTermException, IOException {
         Query q = new Query(Collection.CHARACTER, serviceId).filter("name.first_lower", name.toLowerCase())
-                .show("character_id")
-                .join(new Join(Collection.OUTFIT_MEMBER_EXTENDED).on("character_id").show("alias"));
+                .show(CC.CHARACTER_ID)
+                .join(new Join(Collection.OUTFIT_MEMBER_EXTENDED).on(CC.CHARACTER_ID).show("alias"));
         List<ICensusCollection> list = q.getAndParse();
 
         if (list == null || list.isEmpty()) {
@@ -412,7 +423,7 @@ public class DaybreakApiQuery {
 
     public static List<String> getMemberIdsByOutfitId(String outfit_id, String outfit_rank)
             throws CensusInvalidSearchTermException, IOException {
-        Join outfit_members = new Join(Collection.OUTFIT_MEMBER).on("outfit_id").list(1).show("character_id");
+        Join outfit_members = new Join(Collection.OUTFIT_MEMBER).on("outfit_id").list(1).show(CC.CHARACTER_ID);
         if (outfit_rank != null && !outfit_rank.isEmpty()) {
             outfit_members.terms(new Pair<String, String>("rank", outfit_rank));
         }
@@ -436,8 +447,8 @@ public class DaybreakApiQuery {
 
     public static stinkybot.utils.daybreakutils.enums.World getOutfitWorldById(String id)
             throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.OUTFIT_MEMBER, serviceId).filter("outfit_id", id).show("character_id")
-                .join(new Join(Collection.CHARACTERS_WORLD).on("character_id").show("world_id"));
+        Query q = new Query(Collection.OUTFIT_MEMBER, serviceId).filter("outfit_id", id).show(CC.CHARACTER_ID)
+                .join(new Join(Collection.CHARACTERS_WORLD).on(CC.CHARACTER_ID).show("world_id"));
 
         List<ICensusCollection> list = q.getAndParse();
 
@@ -469,7 +480,7 @@ public class DaybreakApiQuery {
 
     public static stinkybot.utils.daybreakutils.enums.Faction getCharacterFactionById(String id)
             throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.CHARACTER, serviceId).filter("character_id", id).show("faction_id");
+        Query q = new Query(Collection.CHARACTER, serviceId).filter(CC.CHARACTER_ID, id).show("faction_id");
 
         List<ICensusCollection> list = q.getAndParse();
 
@@ -483,7 +494,7 @@ public class DaybreakApiQuery {
     public static stinkybot.utils.daybreakutils.enums.Faction getOutfitFactionByTag(String tag)
             throws CensusInvalidSearchTermException, IOException {
         Query q = new Query(Collection.OUTFIT_MEMBER_EXTENDED, serviceId).filter("alias_lower", tag.toLowerCase())
-                .show("character_id").join(new Join(Collection.CHARACTER).on("character_id").show("faction_id"));
+                .show(CC.CHARACTER_ID).join(new Join(Collection.CHARACTER).on(CC.CHARACTER_ID).show("faction_id"));
 
         List<ICensusCollection> list = q.getAndParse();
 
@@ -501,8 +512,8 @@ public class DaybreakApiQuery {
 
     public static stinkybot.utils.daybreakutils.enums.Faction getOutfitFactionById(String id)
             throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.OUTFIT_MEMBER_EXTENDED, serviceId).filter("outfit_id", id).show("character_id")
-                .join(new Join(Collection.CHARACTER).on("character_id").show("faction_id"));
+        Query q = new Query(Collection.OUTFIT_MEMBER_EXTENDED, serviceId).filter("outfit_id", id).show(CC.CHARACTER_ID)
+                .join(new Join(Collection.CHARACTER).on(CC.CHARACTER_ID).show("faction_id"));
 
         List<ICensusCollection> list = q.getAndParse();
 
@@ -520,7 +531,7 @@ public class DaybreakApiQuery {
 
     public static OutfitMemberExtended getOutfitMemberById(String id)
             throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.OUTFIT_MEMBER_EXTENDED, serviceId).filter("character_id", id);
+        Query q = new Query(Collection.OUTFIT_MEMBER_EXTENDED, serviceId).filter(CC.CHARACTER_ID, id);
 
         List<ICensusCollection> list = q.getAndParse();
 
@@ -568,7 +579,7 @@ public class DaybreakApiQuery {
     }
 
     public static void getWeaponsForCharacter(String id) throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId).filter("character_id", "5428021759087055329");
+        Query q = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId).filter(CC.CHARACTER_ID, "5428021759087055329");
 
         List<ICensusCollection> list = q.getAndParse();
 

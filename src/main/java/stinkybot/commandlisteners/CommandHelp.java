@@ -3,6 +3,9 @@ package stinkybot.commandlisteners;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import org.reflections.Reflections;
+import stinkybot.commandlisteners.utilities.CommandAnnotation;
+import stinkybot.commandlisteners.utilities.CommandInterface;
+import stinkybot.commandlisteners.utilities.CommandsListener;
 
 import java.lang.reflect.Constructor;
 import java.util.Set;
