@@ -90,12 +90,12 @@ public class CommandStats implements CommandInterface {
         eb.setColor(0xff3923);
         eb.setTitle("Character Statistics Of Player: " + playerName);
         eb.setDescription("Directive Score - " + directiveScore +
-                "\n" + "Accuracy - " + String.format("%.02f", accuracy) +
-                "\n" + "Headshot Ratio - " + String.format("%.02f", headshotRatio) +
-                "\n" + "KDR - " + String.format("%.02f", killDeathRatio) +
+                "\n" + "Accuracy - " + String.format("%.02f", accuracy) + "%"+
+                "\n" + "Headshot Ratio - " + String.format("%.02f", headshotRatio) + "%" +
+                "\n" + "KDR - " + String.format("%.02f", killDeathRatio) + "%" +
                 "\n" + "KPM - " + String.format("%.02f", killsPerMin) +
                 "\n" + "SPM - " + String.format("%.02f", scorePerMinute) +
-                "\n" + "Siege - " + String.format("%.02f", siegeRating));
+                "\n" + "Siege - " + String.format("%.02f", siegeRating) + "%") ;
         return eb;
     }
 
