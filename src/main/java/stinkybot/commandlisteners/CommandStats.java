@@ -11,6 +11,7 @@ import stinkybot.commandlisteners.utilities.CC;
 import stinkybot.commandlisteners.utilities.CommandInterface;
 import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
 import stinkybot.utils.daybreakutils.query.dto.internal.Character;
+import stinkybot.utils.daybreakutils.query.dto.util.BattleRank;
 import stinkybot.utils.daybreakutils.query.dto.util.Times;
 
 import java.io.IOException;
@@ -57,8 +58,8 @@ public class CommandStats implements CommandInterface {
         }
         Map<String, Object> properties = character.getProperties();
         List<Map<String, String>> stat = (List<Map<String, String>>) properties.get(CC.STAT);
-        List<Map<String, String>> weaponStatByFaction = (List<Map<String, String>>) properties.get(CC.WEAPON_STAT_BY_FACTION);
-        List<Map<String, String>> weaponStat = (List<Map<String, String>>) properties.get(CC.WEAPON_STAT);
+//        List<Map<String, String>> weaponStatByFaction = (List<Map<String, String>>) properties.get(CC.WEAPON_STAT_BY_FACTION);
+//        List<Map<String, String>> weaponStat = (List<Map<String, String>>) properties.get(CC.WEAPON_STAT);
         List<Map<String, String>> statByFaction = (List<Map<String, String>>) properties.get(CC.STAT_BY_FACTION);
         List<Map<String, Object>> directiveTree = (List<Map<String, Object>>) properties.get(CC.DIRECTIVE_TREE);
 
@@ -75,28 +76,56 @@ public class CommandStats implements CommandInterface {
         }
 
         Map<String, Double> statToValueMap = getStatToValueForever(stat);
+//        Map<String, Double> statToValueMapWeapon = getStatToValueWeapon(weaponStat);
         Map<String, Double> statByFactionToValueMap = getStatByFactionToValueMap(statByFaction);
+//        Map<String, Double> statByFactionToValueMapWeapon = getStatByFactionToValueMapWeapons(weaponStatByFaction);
         statToValueMap.putAll(statByFactionToValueMap);
         Times times = character.getTimes();
-        Date date = new Date(Long.parseLong(times.getLast_save()) * 1000);
+        BattleRank battleRank = character.getBattle_rank();
 
+//        Date date = new Date(Float.parseFloat())
+//        Date date = new Date(Long.parseLong(times.getLast_save()) * 1000);
+        String br = battleRank.getValue();
+        String lastLoginDate = times.getLast_login_date();
+        String creationDate = times.getCreation_date();
         double accuracy = statToValueMap.get("weapon_hit_count") / statToValueMap.get("weapon_fire_count") * 100;
         double headshotRatio = statToValueMap.get("weapon_headshots") / statToValueMap.get("weapon_kills") * 100;
-        double killDeathRatio = statToValueMap.get("weapon_kills") / statToValueMap.get("weapon_deaths");
+        double kills = statToValueMap.get("weapon_kills");
+        double deaths = statToValueMap.get("weapon_deaths");
+        double killDeathRatio =  kills/deaths ;
         double killsPerMin = statToValueMap.get("weapon_kills") / (statToValueMap.get("play_time") / 60);
         double scorePerMinute = statToValueMap.get("weapon_score") / (statToValueMap.get("play_time") / 60);
         double siegeRating = statToValueMap.get("facility_capture_count") / statToValueMap.get("facility_defended_count") * 100;
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(0xff3923);
         eb.setTitle("Character Statistics Of Player: " + playerName);
-        eb.setDescription("Directive Score - " + directiveScore +
+        eb.setDescription("Battle Rank - " + br +
+                "\n" + "Directive Score - " + directiveScore +
                 "\n" + "Accuracy - " + String.format("%.02f", accuracy) + "%"+
                 "\n" + "Headshot Ratio - " + String.format("%.02f", headshotRatio) + "%" +
+                "\n" + "Kills - " + String.format("%.02f", kills) +
+                "\n" + "Deaths - " + String.format("%.02f", deaths) +
                 "\n" + "KDR - " + String.format("%.02f", killDeathRatio) + "%" +
                 "\n" + "KPM - " + String.format("%.02f", killsPerMin) +
                 "\n" + "SPM - " + String.format("%.02f", scorePerMinute) +
-                "\n" + "Siege - " + String.format("%.02f", siegeRating) + "%") ;
+                "\n" + "Siege - " + String.format("%.02f", siegeRating) + "%" +
+                "\n" + "Started Playing Since - " + creationDate +
+                "\n" + "Last Login Date - " + lastLoginDate);
         return eb;
+    }
+
+    @NotNull
+    private Map<String, Double> getStatByFactionToValueMapWeapons(List<Map<String, String>> statByFaction) {
+        Map<String, Double> statByFactionToValueMap = new HashMap<>();
+        for (Map<String, String> statToValue : statByFaction) {
+            String statName = statToValue.get(CC.STAT_NAME);
+            double valueForeverNc = Double.parseDouble(statToValue.get(CC.VALUE_NC));
+            double valueForeverVs = Double.parseDouble(statToValue.get(CC.VALUE_VS));
+            double valueForeverTr = Double.parseDouble(statToValue.get(CC.VALUE_TR));
+            double total = valueForeverTr + valueForeverVs + valueForeverNc;
+            statByFactionToValueMap.compute(statName, (k, v) -> ((v == null) ? 0 : v) + total);
+        }
+        return statByFactionToValueMap;
     }
 
     @NotNull
@@ -118,6 +147,16 @@ public class CommandStats implements CommandInterface {
         for (Map<String, String> statToValue : stat) {
             String statName = statToValue.get(CC.STAT_NAME);
             double valueForever = Double.parseDouble(statToValue.get(CC.VALUE_FOREVER));
+            resultMap.compute(statName, (k, v) -> ((v == null) ? 0 : v) + valueForever);
+        }
+        return resultMap;
+    }
+
+    private Map<String, Double> getStatToValueWeapon(List<Map<String, String>> stat) {
+        Map<String, Double> resultMap = new HashMap<>();
+        for (Map<String, String> statToValue : stat) {
+            String statName = statToValue.get(CC.STAT_NAME);
+            double valueForever = Double.parseDouble(statToValue.get(CC.VALUE));
             resultMap.compute(statName, (k, v) -> ((v == null) ? 0 : v) + valueForever);
         }
         return resultMap;

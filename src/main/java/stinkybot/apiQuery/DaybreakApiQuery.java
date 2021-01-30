@@ -110,10 +110,10 @@ public class DaybreakApiQuery {
                         .show(CC.STAT_NAME, CC.VALUE_FOREVER, CC.PROFILE_ID))
                 .join(new Join(Collection.CHARACTERS_STAT_BY_FACTION).on(CC.CHARACTER_ID).list(1).inject_at(CC.STAT_BY_FACTION)
                         .show(CC.STAT_NAME, CC.VALUE_FOREVER_NC, CC.VALUE_FOREVER_TR, CC.VALUE_FOREVER_VS))
-                .join(new Join(Collection.CHARACTERS_WEAPON_STAT).on(CC.CHARACTER_ID).list(1).inject_at(CC.WEAPON_STAT)
-                .show(CC.ITEM_ID, CC.STAT_NAME, CC.VALUE).terms(new Pair<>(CC.ITEM_ID,"!0")))
-                .join(new Join(Collection.CHARACTERS_WEAPON_STAT_BY_FACTION).on(CC.CHARACTER_ID).list(1).inject_at(CC.WEAPON_STAT_BY_FACTION)
-                        .show(CC.ITEM_ID,CC.STAT_NAME,CC.VALUE_VS,CC.VALUE_NC, CC.VALUE_TR).terms(new Pair<>(CC.ITEM_ID,"!0")))
+//                .join(new Join(Collection.CHARACTERS_WEAPON_STAT).on(CC.CHARACTER_ID).list(1).inject_at(CC.WEAPON_STAT)
+//                .show(CC.ITEM_ID, CC.STAT_NAME, CC.VALUE).terms(new Pair<>(CC.ITEM_ID,"!0")))
+//                .join(new Join(Collection.CHARACTERS_WEAPON_STAT_BY_FACTION).on(CC.CHARACTER_ID).list(1).inject_at(CC.WEAPON_STAT_BY_FACTION)
+//                        .show(CC.ITEM_ID,CC.STAT_NAME,CC.VALUE_VS,CC.VALUE_NC, CC.VALUE_TR).terms(new Pair<>(CC.ITEM_ID,"!0")))
                 .getAndParse();
         if (list == null || list.isEmpty()) {
             return null;
