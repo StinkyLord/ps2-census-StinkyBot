@@ -96,6 +96,16 @@ public class CommandStats implements CommandInterface {
         double killsPerMin = statToValueMap.get("weapon_kills") / (statToValueMap.get("play_time") / 60);
         double scorePerMinute = statToValueMap.get("weapon_score") / (statToValueMap.get("play_time") / 60);
         double siegeRating = statToValueMap.get("facility_capture_count") / statToValueMap.get("facility_defended_count") * 100;
+        double inGameTime = statToValueMap.get("weapon_play_time") / 86400;
+        String[] split = String.valueOf(inGameTime).split("\\.");
+        String daysString = split[0];
+        String remainder = "0." + split[1];
+        double hoursInGame = Double.parseDouble(remainder)*24;
+        double totalPlayTime = statToValueMap.get("play_time") / 86400;
+        String[] split2 = String.valueOf(totalPlayTime).split("\\.");
+        String daysTotal = split2[0];
+        String remainderTotal = "0." + split[1];
+        double hoursTotal = Double.parseDouble(remainderTotal)*24;
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(0xff3923);
         eb.setTitle("Character Statistics Of Player: " + playerName);
@@ -103,12 +113,14 @@ public class CommandStats implements CommandInterface {
                 "\n" + "Directive Score - " + directiveScore +
                 "\n" + "Accuracy - " + String.format("%.02f", accuracy) + "%"+
                 "\n" + "Headshot Ratio - " + String.format("%.02f", headshotRatio) + "%" +
-                "\n" + "Kills - " + String.format("%.02f", kills) +
-                "\n" + "Deaths - " + String.format("%.02f", deaths) +
-                "\n" + "KDR - " + String.format("%.02f", killDeathRatio) + "%" +
+                "\n" + "Kills - " + String.format("%.0f", kills) +
+                "\n" + "Deaths - " + String.format("%.0f", deaths) +
+                "\n" + "KDR - " + String.format("%.02f", killDeathRatio) +
                 "\n" + "KPM - " + String.format("%.02f", killsPerMin) +
                 "\n" + "SPM - " + String.format("%.02f", scorePerMinute) +
                 "\n" + "Siege - " + String.format("%.02f", siegeRating) + "%" +
+                "\n" + "Play Time - " + daysString + " Days " + String.format("%.0f", hoursInGame) + " Hours" +
+                "\n" + "Total Time - " + daysTotal + " Days " + String.format("%.0f", hoursTotal) + " Hours" +
                 "\n" + "Started Playing Since - " + creationDate +
                 "\n" + "Last Login Date - " + lastLoginDate);
         return eb;
