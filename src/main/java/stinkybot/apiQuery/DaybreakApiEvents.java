@@ -6,7 +6,9 @@ import stinkybot.utils.daybreakutils.EventStreamClient;
 import stinkybot.utils.daybreakutils.anatomy.event.*;
 import stinkybot.utils.daybreakutils.event.listener.EventStreamListener;
 import stinkybot.utils.daybreakutils.event.listener.GenericEventPrinter;
+import stinkybot.utils.daybreakutils.event.listener.WriteToFileEvent;
 
+import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -31,14 +33,13 @@ public class DaybreakApiEvents {
             client.connect();
 
             client.sendMessage(new EventMessageBuilder(EventStreamAction.SUBSCRIBE)
-                    .worlds(EventStreamWorld.ALL)
-                    .chars(GenericCharacter.ALL.toString())
-                    .events(CharacterEvent.ALL)
+                    .worlds(EventStreamWorld.MILLER)
+                    .events(WorldEvent.CONTINENT_UNLOCK)
                     .build());
 
 
             try {
-                TimeUnit.SECONDS.sleep(2);
+                TimeUnit.SECONDS.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 Thread.interrupted();
@@ -48,27 +49,40 @@ public class DaybreakApiEvents {
         }
     }
 
-    /**
-     * Synchronously connects to the API, sends a help request message, then closes and terminates
-     */
-    public static void syncHelpRequest() {
+
+    public static void streamAllEventsForStinkyBot(BufferedWriter bw, BufferedWriter bw2,BufferedWriter bw3,
+                                                   long sleep, long recordMin, String[] chars) {
+        if (sleep > 0){
+            try {
+                TimeUnit.MINUTES.sleep(sleep);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        WriteToFileEvent fileWriter = new WriteToFileEvent(bw, bw2, bw3);
         try (EventStreamClient client = EventStreamClient.getInstance()) {
-            GenericEventPrinter printer = new GenericEventPrinter();
-            client.addEventListeners(printer);
-            client.awaitConnection();
-            client.sendHelpRequest();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            client.addEventListeners(fileWriter);
+            client.connect();
 
-        try {
-            TimeUnit.SECONDS.sleep(2);
-        } catch (InterruptedException e) {
-            Thread.interrupted();
-            e.printStackTrace();
+            client.sendMessage(new EventMessageBuilder(EventStreamAction.SUBSCRIBE)
+                    .worlds(EventStreamWorld.MILLER)
+                    .chars(chars)
+                    .events(CharacterEvent.DEATH, CharacterEvent.VEHICLE_DESTROY, CharacterEvent.GAIN_EXPERIENCE,
+                            CharacterEvent.PLAYER_LOGIN, CharacterEvent.PLAYER_LOGOUT)
+                    .build());
+            try {
+                TimeUnit.SECONDS.sleep(recordMin);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                Thread.interrupted();
+            } finally {
+                client.close();
+            }
+        } catch (IOException e1) {
+            e1.printStackTrace();
         }
-
     }
+
 
     /**
      * Synchronously connects to the API, subscribes to FacilityControl events and all events on Cobalt and Miller.
@@ -85,9 +99,9 @@ public class DaybreakApiEvents {
             client.addEventListeners(printer);
             client.awaitConnection();
 
-            client.subscribe(EventStreamWorld.COBALT, WorldEvent.FACILITY_CONTROL);
             client.subscribe(EventStreamWorld.MILLER, WorldEvent.ALL);
             client.subscribe(GenericCharacter.ALL.toString(), CharacterEvent.GAIN_EXPERIENCE);
+
 
 
             try {

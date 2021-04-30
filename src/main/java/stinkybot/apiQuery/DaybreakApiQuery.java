@@ -15,6 +15,7 @@ import stinkybot.utils.daybreakutils.tree.Pair;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -79,6 +80,31 @@ public class DaybreakApiQuery {
         CharactersWeaponStat charactersWeaponStat = (CharactersWeaponStat) list.get(0);
         List<ICensusCollection> nested = charactersWeaponStat.getNested();
         if (nested == null || nested.isEmpty() || !(nested.get(0) instanceof Vehicle) || !(nested.get(1) instanceof Item)) {
+            return null;
+        }
+        return (CharactersWeaponStat) list.get(0);
+    }
+
+    public static CharactersWeaponStat getTopIVI5weapons(String name) throws IOException, CensusInvalidSearchTermException {
+        String characterId = getPlayerIdByName(name);
+        if (characterId == null) {
+            return null;
+        }
+        List<ICensusCollection> list = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId)
+                .filter(CC.CHARACTER_ID, characterId)
+                .filter("stat_name", "weapon_score")
+                .filter(CC.ITEM_ID, SearchModifier.NOT, "0", "650", "432", "44605", "429", "800623", "1095"
+                        , "881", "6008686", "50560", "34002", "85", "16031", "804652", "804179")
+                .filter("vehicle_id", "0")
+                .sort(new Pair<>("value", -1))
+                .join(new Join(Collection.ITEM).on(CC.ITEM_ID))
+                .getAndParse();
+        if (list == null || list.isEmpty() || !(list.get(0) instanceof CharactersWeaponStat)) {
+            return null;
+        }
+        CharactersWeaponStat charactersWeaponStat = (CharactersWeaponStat) list.get(0);
+        List<ICensusCollection> nested = charactersWeaponStat.getNested();
+        if (nested == null || nested.isEmpty() || !(nested.get(0) instanceof Item)) {
             return null;
         }
         return (CharactersWeaponStat) list.get(0);
@@ -491,6 +517,47 @@ public class DaybreakApiQuery {
         return stinkybot.utils.daybreakutils.enums.Faction.findFaction(Integer.parseInt(((Character) list.get(0)).getFaction_id()));
     }
 
+    /**
+     * 1) character id
+     * 2) character name
+     * 3) faction
+     *
+     * @param ids character ids
+     * @return data
+     */
+    public static List<CharacterName> getCharacterNamesByIds(String[] ids)
+            throws CensusInvalidSearchTermException, IOException {
+        Query q = new Query(Collection.CHARACTER_NAME, serviceId)
+                .filter(CC.CHARACTER_ID, ids)
+                .show(CC.CHARACTER_ID, CC.NAME)
+                .limit(ids.length);
+
+        List<ICensusCollection> list = q.getAndParse();
+
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+
+        return list.stream().map(element -> (CharacterName) element).collect(Collectors.toList());
+    }
+
+    public static List<CharacterName> getCharacterNamesByName(String[] names)
+            throws CensusInvalidSearchTermException, IOException {
+
+        Query q = new Query(Collection.CHARACTER_NAME, serviceId)
+                .filter("name.first_lower", names)
+                .show(CC.CHARACTER_ID, CC.NAME)
+                .limit(names.length);
+
+        List<ICensusCollection> list = q.getAndParse();
+
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+
+        return list.stream().map(element -> (CharacterName) element).collect(Collectors.toList());
+    }
+
     public static stinkybot.utils.daybreakutils.enums.Faction getOutfitFactionByTag(String tag)
             throws CensusInvalidSearchTermException, IOException {
         Query q = new Query(Collection.OUTFIT_MEMBER_EXTENDED, serviceId).filter("alias_lower", tag.toLowerCase())
@@ -539,7 +606,40 @@ public class DaybreakApiQuery {
             return null;
         }
 
-        return (OutfitMemberExtended) list.get(0);
+        return (OutfitMemberExtended) list;
+    }
+
+    public static List<OutfitMember> getOutfitMembersByOutfitId(String id) throws IOException, CensusInvalidSearchTermException {
+        List<ICensusCollection> list = new Query(Collection.OUTFIT_MEMBER, serviceId)
+                .filter("outfit_id", id)
+                .limit(1000)
+                .getAndParse();
+
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        List<OutfitMember> list1 = new LinkedList<>();
+        list.forEach(coll -> {
+            list1.add((OutfitMember) coll);
+        });
+        return list1;
+    }
+
+    public static String[] getCharacterIdsFromOutfitTag(String tag) throws IOException, CensusInvalidSearchTermException {
+        Outfit outfit = getOutfitByTag(tag.toLowerCase());
+
+        if (outfit == null) {
+            return null;
+        }
+        String outfit_id = outfit.getOutfit_id();
+        List<OutfitMember> outfitMembersByOutfitId = DaybreakApiQuery.getOutfitMembersByOutfitId(outfit_id);
+
+        if (outfitMembersByOutfitId == null) {
+            return null;
+        }
+
+        return outfitMembersByOutfitId.stream()
+                .map(OutfitMember::getCharacter_id).toArray(String[]::new);
     }
 
     public static MapRegion getRegionByFacilityId(String id) throws CensusInvalidSearchTermException, IOException {
@@ -567,7 +667,7 @@ public class DaybreakApiQuery {
     }
 
     public static MetagameEventState getAlertStateById(String id) throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.METAGAME_EVENT_STATE, serviceId).filter("metagame_event_state_id", id);
+        Query q = new Query(Collection.ZONE, serviceId).filter("metagame_event_state_id", id);
 
         List<ICensusCollection> list = q.getAndParse();
 
@@ -578,43 +678,5 @@ public class DaybreakApiQuery {
         return (MetagameEventState) list.get(0);
     }
 
-    public static void getWeaponsForCharacter(String id) throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId).filter(CC.CHARACTER_ID, "5428021759087055329");
-
-        List<ICensusCollection> list = q.getAndParse();
-
-//        if (list == null || list.isEmpty()) {
-//            return null;
-//        }
-
-//        return (MetagameEventState) list.get(0);
-    }
 
 }
-
-/*
- "character" +
-`?character_id=${character_ids_partition.join( "," )}` +
-"&c:show=character_id,times.last_save" +
-//join characters_stat
-"&c:join=characters_stat^inject_at:stat^list:1^show:stat_name'profile_id'value_forever" +
-"&c:tree=start:stat^field:stat_name" +
-"&c:tree=profile_id" +
-"&c:tree=value_forever" +
-//join characters_stat_by_faction
-"&c:join=characters_stat_by_faction^inject_at:stat_by_faction^list:1^show:stat_name'profile_id  'value_forever_vs'value_forever_nc'value_forever_tr" +
-"&c:tree=start:stat_by_faction^field:stat_name" +
-"&c:tree=profile_id" +
-//join characters_directive_tree
-"&c:join=characters_directive_tree^inject_at:directive_tree^list:1^show:directive_tree_id       'current_directive_tier_id" +
-//join characters_weapon_stat
-"&c:join=characters_weapon_stat^inject_at:weapon_stat^list:1^show:item_id'stat_name'value^terms   :item_id=!0" +
-"&c:tree=start:weapon_stat^field:item_id" +
-"&c:tree=stat_name" +
-"&c:tree=value" +
-//join characters_weapon_stat_by_faction
-"&c:join=characters_weapon_stat_by_faction^inject_at:weapon_stat_by_faction^list:1^show:item_id 'stat_name'value_vs'value_nc'value_tr^terms:item_id=!0" +
-"&c:tree=start:weapon_stat_by_faction^field:item_id" +
-"&c:tree=stat_name",
-
-* */

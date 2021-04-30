@@ -23,4 +23,5 @@ public class CC {
     public static final String VALUE_VS = "value_vs";
     public static final String VALUE_NC = "value_nc";
     public static final String VALUE_TR = "value_tr";
+    public static final String NAME = "name";
 }

@@ -12,13 +12,12 @@ import java.util.Set;
 
 public class CommandsListener extends ListenerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(CommandsListener.class);
-    private static final String EMPTY_STRING = "";
     public static final String PREFIX = "~";
 
     @Override
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
         String[] args = event.getMessage().getContentRaw().split("\\s+");
-        if (args.length > 2 || !args[0].startsWith(PREFIX)) {
+        if (!args[0].startsWith(PREFIX)) {
             return;
         }
         String commandAbstractFullName = CommandHelp.class.getPackage().getName();

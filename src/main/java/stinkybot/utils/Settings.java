@@ -10,6 +10,13 @@ public class Settings {
 	@JsonProperty("DaybreakServiceId")
 	private String daybreakServiceId;
 
+	@JsonProperty("sqlUser")
+	private String sqlUser;
+
+	@JsonProperty("sqlPass")
+	private String sqlPass;
+
+
 	public String getBotToken() {
 		return botToken;
 	}
@@ -25,5 +32,20 @@ public class Settings {
 	public void setDaybreakServiceId(String daybreakServiceId) {
 		this.daybreakServiceId = daybreakServiceId;
 	}
-	
+
+	public String getSqlUser() {
+		return sqlUser;
+	}
+
+	public void setSqlUser(String sqlUser) {
+		this.sqlUser = sqlUser;
+	}
+
+	public String getSqlPass() {
+		return sqlPass;
+	}
+
+	public void setSqlPass(String sqlPass) {
+		this.sqlPass = sqlPass;
+	}
 }

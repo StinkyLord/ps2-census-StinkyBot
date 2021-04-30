@@ -8,7 +8,7 @@ import java.net.URL;
 import javax.imageio.ImageIO;
 public class JoinImage {
 
-        public static File joinImages(String image1, String image2)
+        public synchronized static File joinImages(String image1, String image2)
         {
             File file = new File("joined.png");
             try {

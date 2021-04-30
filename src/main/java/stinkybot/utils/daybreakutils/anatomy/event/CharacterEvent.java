@@ -14,7 +14,8 @@ public enum CharacterEvent {
     PLAYER_LOGOUT("PlayerLogout"),
     SKILL_ADDED("SkillAdded"),
     VEHICLE_DESTROY("VehicleDestroy");
-	
+
+
 	private String value;
 	
 	private CharacterEvent(String value) {

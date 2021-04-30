@@ -58,8 +58,6 @@ public class CommandStats implements CommandInterface {
         }
         Map<String, Object> properties = character.getProperties();
         List<Map<String, String>> stat = (List<Map<String, String>>) properties.get(CC.STAT);
-//        List<Map<String, String>> weaponStatByFaction = (List<Map<String, String>>) properties.get(CC.WEAPON_STAT_BY_FACTION);
-//        List<Map<String, String>> weaponStat = (List<Map<String, String>>) properties.get(CC.WEAPON_STAT);
         List<Map<String, String>> statByFaction = (List<Map<String, String>>) properties.get(CC.STAT_BY_FACTION);
         List<Map<String, Object>> directiveTree = (List<Map<String, Object>>) properties.get(CC.DIRECTIVE_TREE);
 
@@ -76,15 +74,12 @@ public class CommandStats implements CommandInterface {
         }
 
         Map<String, Double> statToValueMap = getStatToValueForever(stat);
-//        Map<String, Double> statToValueMapWeapon = getStatToValueWeapon(weaponStat);
         Map<String, Double> statByFactionToValueMap = getStatByFactionToValueMap(statByFaction);
-//        Map<String, Double> statByFactionToValueMapWeapon = getStatByFactionToValueMapWeapons(weaponStatByFaction);
         statToValueMap.putAll(statByFactionToValueMap);
         Times times = character.getTimes();
         BattleRank battleRank = character.getBattle_rank();
 
-//        Date date = new Date(Float.parseFloat())
-//        Date date = new Date(Long.parseLong(times.getLast_save()) * 1000);
+
         String br = battleRank.getValue();
         String lastLoginDate = times.getLast_login_date();
         String creationDate = times.getCreation_date();
@@ -125,6 +120,8 @@ public class CommandStats implements CommandInterface {
                 "\n" + "Last Login Date - " + lastLoginDate);
         return eb;
     }
+
+
 
     @NotNull
     private Map<String, Double> getStatByFactionToValueMapWeapons(List<Map<String, String>> statByFaction) {
