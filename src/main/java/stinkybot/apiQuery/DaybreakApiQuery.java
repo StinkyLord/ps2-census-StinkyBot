@@ -85,29 +85,44 @@ public class DaybreakApiQuery {
         return (CharactersWeaponStat) list.get(0);
     }
 
-    public static CharactersWeaponStat getTopIVI5weapons(String name) throws IOException, CensusInvalidSearchTermException {
-        String characterId = getPlayerIdByName(name);
-        if (characterId == null) {
+    public static List<CharactersWeaponStatByFaction> getWeaponsHeadshotRateByChar(String id) throws IOException, CensusInvalidSearchTermException {
+        if (id == null) {
+            return null;
+        }
+        List<ICensusCollection> list = new Query(Collection.CHARACTERS_WEAPON_STAT_BY_FACTION, serviceId)
+                .filter(CC.CHARACTER_ID, id).limit(2000)
+                .filter(CC.ITEM_ID, SearchModifier.NOT, "0", "650", "432", "44605", "429", "800623", "1095"
+                        , "881", "6008686", "50560", "34002", "85", "13", "25004", "25000","25001","39001","39002",
+                        "86", "88", "16031", "804652", "804179", "15001")
+                .filter("vehicle_id", "0")
+                .filter("stat_name", "weapon_kills", "weapon_headshots")
+                .join(new Join(Collection.ITEM).on(CC.ITEM_ID).inject_at("item"))
+                .getAndParse();
+
+        List<CharactersWeaponStatByFaction> list1 = new ArrayList<>();
+        list.forEach(coll -> {
+            list1.add((CharactersWeaponStatByFaction) coll);
+        });
+        return list1;
+    }
+
+    public static List<CharactersWeaponStat> getWeaponsAccuracyByChar(String id) throws IOException, CensusInvalidSearchTermException {
+        if (id == null) {
             return null;
         }
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId)
-                .filter(CC.CHARACTER_ID, characterId)
-                .filter("stat_name", "weapon_score")
+                .filter(CC.CHARACTER_ID, id).limit(2000)
                 .filter(CC.ITEM_ID, SearchModifier.NOT, "0", "650", "432", "44605", "429", "800623", "1095"
-                        , "881", "6008686", "50560", "34002", "85", "16031", "804652", "804179")
+                        , "881", "6008686", "50560", "34002", "85", "25004", "25000","25001","39001","39002",
+                        "13", "86", "88", "16031", "804652", "804179", "15001")
                 .filter("vehicle_id", "0")
-                .sort(new Pair<>("value", -1))
-                .join(new Join(Collection.ITEM).on(CC.ITEM_ID))
+                .filter("stat_name", "weapon_fire_count", "weapon_hit_count")
                 .getAndParse();
-        if (list == null || list.isEmpty() || !(list.get(0) instanceof CharactersWeaponStat)) {
-            return null;
-        }
-        CharactersWeaponStat charactersWeaponStat = (CharactersWeaponStat) list.get(0);
-        List<ICensusCollection> nested = charactersWeaponStat.getNested();
-        if (nested == null || nested.isEmpty() || !(nested.get(0) instanceof Item)) {
-            return null;
-        }
-        return (CharactersWeaponStat) list.get(0);
+        List<CharactersWeaponStat> list1 = new ArrayList<>();
+        list.forEach(coll -> {
+            list1.add((CharactersWeaponStat) coll);
+        });
+        return list1;
     }
 
     public static Character test(String playerName) throws IOException, CensusInvalidSearchTermException {
@@ -136,10 +151,6 @@ public class DaybreakApiQuery {
                         .show(CC.STAT_NAME, CC.VALUE_FOREVER, CC.PROFILE_ID))
                 .join(new Join(Collection.CHARACTERS_STAT_BY_FACTION).on(CC.CHARACTER_ID).list(1).inject_at(CC.STAT_BY_FACTION)
                         .show(CC.STAT_NAME, CC.VALUE_FOREVER_NC, CC.VALUE_FOREVER_TR, CC.VALUE_FOREVER_VS))
-//                .join(new Join(Collection.CHARACTERS_WEAPON_STAT).on(CC.CHARACTER_ID).list(1).inject_at(CC.WEAPON_STAT)
-//                .show(CC.ITEM_ID, CC.STAT_NAME, CC.VALUE).terms(new Pair<>(CC.ITEM_ID,"!0")))
-//                .join(new Join(Collection.CHARACTERS_WEAPON_STAT_BY_FACTION).on(CC.CHARACTER_ID).list(1).inject_at(CC.WEAPON_STAT_BY_FACTION)
-//                        .show(CC.ITEM_ID,CC.STAT_NAME,CC.VALUE_VS,CC.VALUE_NC, CC.VALUE_TR).terms(new Pair<>(CC.ITEM_ID,"!0")))
                 .getAndParse();
         if (list == null || list.isEmpty()) {
             return null;

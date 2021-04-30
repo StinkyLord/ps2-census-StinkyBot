@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 @CommandAnnotation
 public class CommandRecord implements CommandInterface {
+
     @Override
     public String getName() {
         return "record";
@@ -32,7 +33,7 @@ public class CommandRecord implements CommandInterface {
 
     @Override
     public String getDescription() {
-        return "record events from PS2 for a timeframe";
+        return "records events from PS2 for a certain timeframe";
     }
 
     @Override

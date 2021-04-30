@@ -6,8 +6,8 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import stinkybot.apiQuery.DaybreakApiQuery;
-import stinkybot.commandlisteners.utilities.CommandAnnotation;
 import stinkybot.commandlisteners.utilities.CC;
+import stinkybot.commandlisteners.utilities.CommandAnnotation;
 import stinkybot.commandlisteners.utilities.CommandInterface;
 import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
 import stinkybot.utils.daybreakutils.query.dto.internal.Character;
@@ -15,7 +15,6 @@ import stinkybot.utils.daybreakutils.query.dto.util.BattleRank;
 import stinkybot.utils.daybreakutils.query.dto.util.Times;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

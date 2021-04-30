@@ -9,17 +9,23 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import stinkybot.apiQuery.DaybreakApiEvents;
+import stinkybot.apiQuery.DaybreakApiQuery;
+import stinkybot.utils.daybreakutils.anatomy.commands.IvIModel;
 import stinkybot.utils.daybreakutils.anatomy.event.GenericCharacter;
 import stinkybot.utils.daybreakutils.event.dto.parsers.DeathOrVehiclePayload;
 import stinkybot.utils.daybreakutils.event.dto.parsers.GainExperiencePayload;
 import stinkybot.utils.daybreakutils.event.dto.parsers.LogInOrLogOutPayload;
 import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
+import stinkybot.utils.daybreakutils.query.dto.internal.Character;
+import stinkybot.utils.daybreakutils.query.dto.internal.CharactersWeaponStat;
+import stinkybot.utils.daybreakutils.query.dto.internal.CharactersWeaponStatByFaction;
+import stinkybot.utils.daybreakutils.query.dto.internal.Item;
+import sun.awt.image.ImageWatched;
 
 import java.io.*;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class AppTest {
     @Ignore
@@ -48,7 +54,7 @@ public class AppTest {
         }
 
         List<DeathOrVehiclePayload> deathOrVehiclePayloads = parseJsonFile(killDeath, DeathOrVehiclePayload.class);
-        List<GainExperiencePayload> gainExperiencePayloads =  parseJsonFile(gainExp, GainExperiencePayload.class);
+        List<GainExperiencePayload> gainExperiencePayloads = parseJsonFile(gainExp, GainExperiencePayload.class);
         List<LogInOrLogOutPayload> logInOrLogOutPayloads = parseJsonFile(playerLogger, LogInOrLogOutPayload.class);
         logInOrLogOutPayloads.toString();
 
@@ -75,7 +81,7 @@ public class AppTest {
         return result;
     }
 
-//        DaybreakApiEvents.asyncPrintAll();
+    //        DaybreakApiEvents.asyncPrintAll();
 //        CommandStats instance = new CommandStats();
 //        Method method = CommandStats.class.getDeclaredMethod("getDaybreakInfo", String.class);
 //        method.setAccessible(true);
@@ -85,6 +91,77 @@ public class AppTest {
     @Test
     public void mema() throws IOException, CensusInvalidSearchTermException {
 //        DaybreakApiEvents.syncReconnect();
-        DaybreakApiEvents.asyncPrintAll();
+//        DaybreakApiEvents.asyncPrintAll();
+
+        Map<String, IvIModel> models = new HashMap<>();
+        String id = DaybreakApiQuery.getPlayerIdByName("Irathi");
+        List<CharactersWeaponStatByFaction> headshotRateRes = DaybreakApiQuery.getWeaponsHeadshotRateByChar(id);
+        List<CharactersWeaponStat> accuracyRes = DaybreakApiQuery.getWeaponsAccuracyByChar(id);
+
+        if (headshotRateRes == null) {
+            return;
+        }
+        for (CharactersWeaponStatByFaction charStat : headshotRateRes) {
+            String itemId = charStat.getItem_id();
+            models.putIfAbsent(itemId, new IvIModel(itemId));
+            IvIModel iviModel = models.get(itemId);
+
+
+            String stat_name = charStat.getStat_name();
+            if (stat_name.equals("weapon_headshots")) {
+                float headshots = Float.parseFloat(charStat.getValue_vs())
+                        + Float.parseFloat(charStat.getValue_nc())
+                        + Float.parseFloat(charStat.getValue_tr());
+                iviModel.setHeadshots(headshots);
+            }
+            if (stat_name.equals("weapon_kills")) {
+                float kills = Float.parseFloat(charStat.getValue_vs())
+                        + Float.parseFloat(charStat.getValue_nc())
+                        + Float.parseFloat(charStat.getValue_tr());
+                iviModel.setKills(kills);
+            }
+            if (iviModel.getItem() == null) {
+                Item item = (Item) charStat.getNested().get(0);
+                String eName = item.getName().getEn();
+                iviModel.setWeaponName(eName);
+                String eDesc = item.getDescription().getEn();
+                iviModel.setWeaponDesc(eDesc);
+                iviModel.setItem(item);
+            }
+        }
+
+        for (CharactersWeaponStat charStat : accuracyRes) {
+            String itemId = charStat.getItem_id();
+            if (!models.containsKey(itemId)) {
+                continue;
+            }
+            IvIModel iviModel = models.get(itemId);
+
+            String stat_name = charStat.getStat_name();
+            if (stat_name.equals("weapon_fire_count")) {
+                float fireCount = Float.parseFloat(charStat.getValue());
+                iviModel.setFireCount(fireCount);
+            }
+            if (stat_name.equals("weapon_hit_count")) {
+                float hitCount = Float.parseFloat(charStat.getValue());
+                iviModel.setHitCount(hitCount);
+            }
+        }
+        models.entrySet().removeIf(entry -> entry.getValue().getFireCount() == 0);
+        for (IvIModel model : models.values()) {
+            if (model.getFireCount() == 0 || model.getKills() < 500) {
+                model.setIvIScore(0);
+                continue;
+            }
+
+            float accuracy =  model.getHitCount() / model.getFireCount()* 100;
+            float headshotRate = model.getHeadshots() / model.getKills() * 100 ;
+            float iviScore = accuracy * headshotRate;
+            model.setIvIScore(iviScore);
+        }
+        List<IvIModel> collect = models.values().stream().sorted().limit(5).collect(Collectors.toList());
+        collect.toString();
+
+
     }
 }

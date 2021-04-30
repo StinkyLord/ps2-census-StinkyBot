@@ -5,20 +5,21 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import stinkybot.apiQuery.DaybreakApiQuery;
+import stinkybot.commandlisteners.utilities.CommandAnnotation;
 import stinkybot.commandlisteners.utilities.CommandInterface;
-import stinkybot.utils.QueryConstants;
-import stinkybot.utils.daybreakutils.anatomy.Constants;
+import stinkybot.utils.daybreakutils.anatomy.commands.IvIModel;
 import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
-import stinkybot.utils.daybreakutils.query.dto.ICensusCollection;
 import stinkybot.utils.daybreakutils.query.dto.internal.CharactersWeaponStat;
 import stinkybot.utils.daybreakutils.query.dto.internal.CharactersWeaponStatByFaction;
 import stinkybot.utils.daybreakutils.query.dto.internal.Item;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@CommandAnnotation
 public class CommandTopIVI implements CommandInterface {
     private static final Logger logger = LoggerFactory.getLogger(CommandTopWeapon.class);
 
@@ -39,7 +40,7 @@ public class CommandTopIVI implements CommandInterface {
                 event.getChannel().sendMessage("topivi requires player name as second argument").queue();
                 return;
             }
-            EmbedBuilder ebInfo2 = getDaybreakInfo(args);
+            EmbedBuilder ebInfo2 = getDaybreakInfo(args[1]);
             if (ebInfo2 != null) {
                 event.getChannel().sendMessage(ebInfo2.build()).queue();
             }
@@ -48,44 +49,90 @@ public class CommandTopIVI implements CommandInterface {
         }
     }
 
-    private EmbedBuilder getDaybreakInfo(String[] args) throws IOException, CensusInvalidSearchTermException {
-        String playerName2 = args[1];
+    private EmbedBuilder getDaybreakInfo(String name) throws IOException, CensusInvalidSearchTermException {
+        Map<String, IvIModel> models = new HashMap<>();
+        String id = DaybreakApiQuery.getPlayerIdByName(name);
+        List<CharactersWeaponStatByFaction> headshotRateRes = DaybreakApiQuery.getWeaponsHeadshotRateByChar(id);
+        List<CharactersWeaponStat> accuracyRes = DaybreakApiQuery.getWeaponsAccuracyByChar(id);
 
-        CharactersWeaponStat weaponScore = DaybreakApiQuery.getPlayerTopWeaponKillsByName(playerName2);
-        if (weaponScore == null) {
+        if (headshotRateRes == null) {
             return null;
         }
-        Item item = (Item) weaponScore.getNested().get(0);
-        String weaponImage = Constants.CENSUS_ENDPOINT.toString() + item.getImage_path();
-        String weaponName = item.getName().getEn();
-        String weaponDesc = item.getDescription().getEn();
-        List<ICensusCollection> weaponInfo = DaybreakApiQuery.getPLayerWeaponStats(weaponScore.getCharacter_id(), item.getItem_id());
-        if (weaponInfo == null) {
-            throw new NullPointerException();
+        for (CharactersWeaponStatByFaction charStat : headshotRateRes) {
+            String itemId = charStat.getItem_id();
+            models.putIfAbsent(itemId, new IvIModel(itemId));
+            IvIModel iviModel = models.get(itemId);
+
+
+            String stat_name = charStat.getStat_name();
+            if (stat_name.equals("weapon_headshots")) {
+                float headshots = Float.parseFloat(charStat.getValue_vs())
+                        + Float.parseFloat(charStat.getValue_nc())
+                        + Float.parseFloat(charStat.getValue_tr());
+                iviModel.setHeadshots(headshots);
+            }
+            if (stat_name.equals("weapon_kills")) {
+                float kills = Float.parseFloat(charStat.getValue_vs())
+                        + Float.parseFloat(charStat.getValue_nc())
+                        + Float.parseFloat(charStat.getValue_tr());
+                iviModel.setKills(kills);
+            }
+            if (iviModel.getItem() == null) {
+                Item item = (Item) charStat.getNested().get(0);
+                String eName = item.getName().getEn();
+                iviModel.setWeaponName(eName);
+                String eDesc = item.getDescription().getEn();
+                iviModel.setWeaponDesc(eDesc);
+                iviModel.setItem(item);
+            }
         }
-        Map<String, CharactersWeaponStatByFaction> stateNameToWeaponInfo = weaponInfo.stream()
-                .collect(Collectors.toMap(
-                        key -> ((CharactersWeaponStatByFaction) key).getStat_name(),
-                        value -> ((CharactersWeaponStatByFaction) value)));
-        CharactersWeaponStatByFaction weaponKills = stateNameToWeaponInfo.get(QueryConstants.WEAPON_KILLS);
-        float killCount = Float.parseFloat(weaponKills.getValue_vs())
-                + Float.parseFloat(weaponKills.getValue_nc())
-                + Float.parseFloat(weaponKills.getValue_tr());
-        CharactersWeaponStat pLayerWeaponDeaths = DaybreakApiQuery.getPLayerWeaponDeaths(weaponScore.getCharacter_id(), item.getItem_id());
-        if (pLayerWeaponDeaths == null) {
-            throw new NullPointerException();
+
+        for (CharactersWeaponStat charStat : accuracyRes) {
+            String itemId = charStat.getItem_id();
+            if (!models.containsKey(itemId)) {
+                continue;
+            }
+            IvIModel iviModel = models.get(itemId);
+
+            String stat_name = charStat.getStat_name();
+            if (stat_name.equals("weapon_fire_count")) {
+                float fireCount = Float.parseFloat(charStat.getValue());
+                iviModel.setFireCount(fireCount);
+            }
+            if (stat_name.equals("weapon_hit_count")) {
+                float hitCount = Float.parseFloat(charStat.getValue());
+                iviModel.setHitCount(hitCount);
+            }
         }
-        float deathCount = Float.parseFloat(pLayerWeaponDeaths.getValue());
-        float kd = killCount / deathCount;
-        EmbedBuilder ebInfo2 = new EmbedBuilder();
-        ebInfo2.setColor(0xff3923);
-        ebInfo2.setTitle("Top Weapon of Player: " + playerName2);
-        ebInfo2.setImage(weaponImage);
-        ebInfo2.setDescription(weaponName +
-                "\n" + weaponDesc
-                + "\n" + "kills: " + killCount +
-                "\n" + "deaths: " + deathCount +
-                "\n" + "KD: " + String.format("%.02f", kd));
-        return ebInfo2;
+        models.entrySet().removeIf(entry -> entry.getValue().getFireCount() == 0);
+        for (IvIModel model : models.values()) {
+            if (model.getFireCount() == 0 || model.getKills() < 500) {
+                model.setIvIScore(0);
+                continue;
+            }
+
+            float accuracy =  model.getHitCount() / model.getFireCount()* 100;
+            float headshotRate = model.getHeadshots() / model.getKills() * 100 ;
+            float iviScore = accuracy * headshotRate;
+            model.setIvIScore(iviScore);
+        }
+        List<IvIModel> sortedIvI = models.values().stream().sorted().limit(5).collect(Collectors.toList());
+        StringBuilder sb = new StringBuilder();
+        sb.append("#) name - iviScore").append("\n");
+        int count = 1;
+        for (IvIModel iviModel : sortedIvI) {
+            if (iviModel != null) {
+                float iviScore = iviModel.getIvIScore();
+                Item item = iviModel.getItem();
+                String en = item.getName().getEn();
+                sb.append(count).append(") ").append(en).append(" - ").append(iviScore).append("\n");
+                count++;
+            }
+        }
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setColor(0xff3923);
+        eb.setTitle("Top Infantry vs Infantry of player: " + name);
+        eb.setDescription(sb.toString());
+        return eb;
     }
 }
