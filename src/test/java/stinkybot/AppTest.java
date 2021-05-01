@@ -159,8 +159,7 @@ public class AppTest {
             float iviScore = accuracy * headshotRate;
             model.setIvIScore(iviScore);
         }
-        List<IvIModel> collect = models.values().stream().sorted().limit(5).collect(Collectors.toList());
-        collect.toString();
+        List<IvIModel> collect = models.values().stream().sorted().collect(Collectors.toList());
 
 
     }

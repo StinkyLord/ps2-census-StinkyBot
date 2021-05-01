@@ -30,7 +30,8 @@ public class CommandTopIVI implements CommandInterface {
 
     @Override
     public String getDescription() {
-        return "topivi [PlayerName] case insensitive, will show 5 top weapons ivi score of the player";
+        return "topivi [PlayerName] case insensitive, will show 5 top weapons ivi score of the player \n " +
+                "Weapons with less than 500 kills are not accounted for.";
     }
 
     @Override
@@ -111,8 +112,8 @@ public class CommandTopIVI implements CommandInterface {
                 continue;
             }
 
-            float accuracy =  model.getHitCount() / model.getFireCount()* 100;
-            float headshotRate = model.getHeadshots() / model.getKills() * 100 ;
+            float accuracy = model.getHitCount() / model.getFireCount() * 100;
+            float headshotRate = model.getHeadshots() / model.getKills() * 100;
             float iviScore = accuracy * headshotRate;
             model.setIvIScore(iviScore);
         }
@@ -121,7 +122,7 @@ public class CommandTopIVI implements CommandInterface {
         sb.append("#) name - iviScore").append("\n");
         int count = 1;
         for (IvIModel iviModel : sortedIvI) {
-            if (iviModel != null) {
+            if (iviModel != null && iviModel.getIvIScore() > 0) {
                 float iviScore = iviModel.getIvIScore();
                 Item item = iviModel.getItem();
                 String en = item.getName().getEn();
