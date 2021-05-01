@@ -60,6 +60,12 @@ public class CommandTopIVI implements CommandInterface {
             return null;
         }
         for (CharactersWeaponStatByFaction charStat : headshotRateRes) {
+            Item item = (Item) charStat.getNested().get(0);
+            String catId = item.getItem_category_id();
+            if(catId.equals("2") || catId.equals("3") || catId.equals("4") || catId.equals("11")
+                    || catId.equals("24") || catId.equals("20") || catId.equals("23") || catId.equals("13")){
+                continue;
+            }
             String itemId = charStat.getItem_id();
             models.putIfAbsent(itemId, new IvIModel(itemId));
             IvIModel iviModel = models.get(itemId);
@@ -79,7 +85,6 @@ public class CommandTopIVI implements CommandInterface {
                 iviModel.setKills(kills);
             }
             if (iviModel.getItem() == null) {
-                Item item = (Item) charStat.getNested().get(0);
                 String eName = item.getName().getEn();
                 iviModel.setWeaponName(eName);
                 String eDesc = item.getDescription().getEn();

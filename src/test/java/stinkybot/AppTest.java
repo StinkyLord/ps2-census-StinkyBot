@@ -94,7 +94,7 @@ public class AppTest {
 //        DaybreakApiEvents.asyncPrintAll();
 
         Map<String, IvIModel> models = new HashMap<>();
-        String id = DaybreakApiQuery.getPlayerIdByName("Irathi");
+        String id = DaybreakApiQuery.getPlayerIdByName("nutshell");
         List<CharactersWeaponStatByFaction> headshotRateRes = DaybreakApiQuery.getWeaponsHeadshotRateByChar(id);
         List<CharactersWeaponStat> accuracyRes = DaybreakApiQuery.getWeaponsAccuracyByChar(id);
 
@@ -102,6 +102,13 @@ public class AppTest {
             return;
         }
         for (CharactersWeaponStatByFaction charStat : headshotRateRes) {
+
+            Item item = (Item) charStat.getNested().get(0);
+            String catId = item.getItem_category_id();
+            if(catId.equals("2") || catId.equals("3") || catId.equals("4") || catId.equals("11")
+            || catId.equals("24") || catId.equals("20") || catId.equals("23") || catId.equals("13")){
+                continue;
+            }
             String itemId = charStat.getItem_id();
             models.putIfAbsent(itemId, new IvIModel(itemId));
             IvIModel iviModel = models.get(itemId);
@@ -121,7 +128,7 @@ public class AppTest {
                 iviModel.setKills(kills);
             }
             if (iviModel.getItem() == null) {
-                Item item = (Item) charStat.getNested().get(0);
+//                Item item = (Item) charStat.getNested().get(0);
                 String eName = item.getName().getEn();
                 iviModel.setWeaponName(eName);
                 String eDesc = item.getDescription().getEn();
@@ -149,7 +156,7 @@ public class AppTest {
         }
         models.entrySet().removeIf(entry -> entry.getValue().getFireCount() == 0);
         for (IvIModel model : models.values()) {
-            if (model.getFireCount() == 0 || model.getKills() < 500) {
+            if (model.getFireCount() == 0 || model.getKills() < 200) {
                 model.setIvIScore(0);
                 continue;
             }
@@ -160,7 +167,7 @@ public class AppTest {
             model.setIvIScore(iviScore);
         }
         List<IvIModel> collect = models.values().stream().sorted().collect(Collectors.toList());
-
+        collect.toString();
 
     }
 }
