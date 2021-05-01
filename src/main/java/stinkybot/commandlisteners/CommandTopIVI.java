@@ -2,6 +2,7 @@ package stinkybot.commandlisteners;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import stinkybot.apiQuery.DaybreakApiQuery;
@@ -31,7 +32,7 @@ public class CommandTopIVI implements CommandInterface {
     @Override
     public String getDescription() {
         return "topivi [PlayerName] case insensitive, will show 5 top weapons ivi score of the player \n " +
-                "Weapons with less than 500 kills are not accounted for.";
+                "Weapons with less than 200  kills are not accounted for.";
     }
 
     @Override
@@ -41,6 +42,7 @@ public class CommandTopIVI implements CommandInterface {
                 event.getChannel().sendMessage("topivi requires player name as second argument").queue();
                 return;
             }
+            event.getChannel().sendTyping().queue();
             EmbedBuilder ebInfo2 = getDaybreakInfo(args[1]);
             if (ebInfo2 != null) {
                 event.getChannel().sendMessage(ebInfo2.build()).queue();
@@ -59,7 +61,6 @@ public class CommandTopIVI implements CommandInterface {
         if (headshotRateRes == null) {
             return null;
         }
-        try {
             for (CharactersWeaponStatByFaction charStat : headshotRateRes) {
                 Item item = (Item) charStat.getNested().get(0);
                 String catId = item.getItem_category_id();
@@ -94,9 +95,6 @@ public class CommandTopIVI implements CommandInterface {
                     iviModel.setItem(item);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         for (CharactersWeaponStat charStat : accuracyRes) {
             String itemId = charStat.getItem_id();
             if (!models.containsKey(itemId)) {
@@ -116,7 +114,7 @@ public class CommandTopIVI implements CommandInterface {
         }
         models.entrySet().removeIf(entry -> entry.getValue().getFireCount() == 0);
         for (IvIModel model : models.values()) {
-            if (model.getFireCount() == 0 || model.getKills() < 500) {
+            if (model.getFireCount() == 0 || model.getKills() < 200) {
                 model.setIvIScore(0);
                 continue;
             }

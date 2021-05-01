@@ -94,7 +94,7 @@ public class AppTest {
 //        DaybreakApiEvents.asyncPrintAll();
 
         Map<String, IvIModel> models = new HashMap<>();
-        String id = DaybreakApiQuery.getPlayerIdByName("nutshell");
+        String id = DaybreakApiQuery.getPlayerIdByName("Sometimesitsjustthewayshegoes");
         List<CharactersWeaponStatByFaction> headshotRateRes = DaybreakApiQuery.getWeaponsHeadshotRateByChar(id);
         List<CharactersWeaponStat> accuracyRes = DaybreakApiQuery.getWeaponsAccuracyByChar(id);
 
@@ -105,7 +105,7 @@ public class AppTest {
 
             Item item = (Item) charStat.getNested().get(0);
             String catId = item.getItem_category_id();
-            if(catId.equals("2") || catId.equals("3") || catId.equals("4") || catId.equals("11")
+            if(catId ==null || catId.equals("2") || catId.equals("3") || catId.equals("4") || catId.equals("11")
             || catId.equals("24") || catId.equals("20") || catId.equals("23") || catId.equals("13")){
                 continue;
             }

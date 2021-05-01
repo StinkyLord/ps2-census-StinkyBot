@@ -28,6 +28,7 @@ public class CommandsListener extends ListenerAdapter {
                 Constructor<?> commandConstructor = commandClass.getConstructor();
                 CommandInterface commandInstance = (CommandInterface) commandConstructor.newInstance();
                 if (args[0].equalsIgnoreCase(PREFIX + commandInstance.getName())) {
+
                     commandInstance.run(event, args);
                 }
             } catch (Exception e) {
