@@ -59,40 +59,44 @@ public class CommandTopIVI implements CommandInterface {
         if (headshotRateRes == null) {
             return null;
         }
-        for (CharactersWeaponStatByFaction charStat : headshotRateRes) {
-            Item item = (Item) charStat.getNested().get(0);
-            String catId = item.getItem_category_id();
-            if(catId.equals("2") || catId.equals("3") || catId.equals("4") || catId.equals("11")
-                    || catId.equals("24") || catId.equals("20") || catId.equals("23") || catId.equals("13")){
-                continue;
-            }
-            String itemId = charStat.getItem_id();
-            models.putIfAbsent(itemId, new IvIModel(itemId));
-            IvIModel iviModel = models.get(itemId);
+        try {
+            for (CharactersWeaponStatByFaction charStat : headshotRateRes) {
+                Item item = (Item) charStat.getNested().get(0);
+                String catId = item.getItem_category_id();
+
+                if (catId == null || catId.equals("2") || catId.equals("3") || catId.equals("4") || catId.equals("11")
+                        || catId.equals("24") || catId.equals("20") || catId.equals("23") || catId.equals("13")) {
+                    continue;
+                }
+                String itemId = charStat.getItem_id();
+                models.putIfAbsent(itemId, new IvIModel(itemId));
+                IvIModel iviModel = models.get(itemId);
 
 
-            String stat_name = charStat.getStat_name();
-            if (stat_name.equals("weapon_headshots")) {
-                float headshots = Float.parseFloat(charStat.getValue_vs())
-                        + Float.parseFloat(charStat.getValue_nc())
-                        + Float.parseFloat(charStat.getValue_tr());
-                iviModel.setHeadshots(headshots);
+                String stat_name = charStat.getStat_name();
+                if (stat_name.equals("weapon_headshots")) {
+                    float headshots = Float.parseFloat(charStat.getValue_vs())
+                            + Float.parseFloat(charStat.getValue_nc())
+                            + Float.parseFloat(charStat.getValue_tr());
+                    iviModel.setHeadshots(headshots);
+                }
+                if (stat_name.equals("weapon_kills")) {
+                    float kills = Float.parseFloat(charStat.getValue_vs())
+                            + Float.parseFloat(charStat.getValue_nc())
+                            + Float.parseFloat(charStat.getValue_tr());
+                    iviModel.setKills(kills);
+                }
+                if (iviModel.getItem() == null) {
+                    String eName = item.getName().getEn();
+                    iviModel.setWeaponName(eName);
+                    String eDesc = item.getDescription().getEn();
+                    iviModel.setWeaponDesc(eDesc);
+                    iviModel.setItem(item);
+                }
             }
-            if (stat_name.equals("weapon_kills")) {
-                float kills = Float.parseFloat(charStat.getValue_vs())
-                        + Float.parseFloat(charStat.getValue_nc())
-                        + Float.parseFloat(charStat.getValue_tr());
-                iviModel.setKills(kills);
-            }
-            if (iviModel.getItem() == null) {
-                String eName = item.getName().getEn();
-                iviModel.setWeaponName(eName);
-                String eDesc = item.getDescription().getEn();
-                iviModel.setWeaponDesc(eDesc);
-                iviModel.setItem(item);
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
         for (CharactersWeaponStat charStat : accuracyRes) {
             String itemId = charStat.getItem_id();
             if (!models.containsKey(itemId)) {
