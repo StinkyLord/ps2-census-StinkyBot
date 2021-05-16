@@ -1,7 +1,7 @@
 package stinkybot.utils.daybreakutils.enums;
 
 public enum Faction {
-	NONE(0, null),
+	NONE(0, "none"),
 	VANU_SOVEREIGNTY(1, "VS"),
 	NEW_CONGLOMERATE(2, "NC"),
 	TERRAN_REPUBLIC(3, "TR"),

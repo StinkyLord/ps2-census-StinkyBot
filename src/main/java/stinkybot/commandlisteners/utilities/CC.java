@@ -2,6 +2,7 @@ package stinkybot.commandlisteners.utilities;
 
 public class CC {
     public static final String DIRECTIVE_TREE_ID = "directive_tree_id";
+    public static final String EMPTY_STRING = "";
     public static final String DIRECTIVE_TIER_ID = "directive_tier_id";
     public static final String DIRECTIVE_POINTS = "directive_points";
     public static final String TIER = "tier";

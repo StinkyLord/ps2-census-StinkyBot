@@ -1,22 +1,26 @@
 package stinkybot.apiQuery;
 
+import org.apache.commons.lang3.StringUtils;
 import stinkybot.commandlisteners.utilities.CC;
 import stinkybot.utils.SettingsReader;
 import stinkybot.utils.daybreakutils.Join;
 import stinkybot.utils.daybreakutils.Query;
 import stinkybot.utils.daybreakutils.anatomy.Collection;
 import stinkybot.utils.daybreakutils.anatomy.SearchModifier;
+import stinkybot.utils.daybreakutils.anatomy.commands.DeathVehicleKillMapper;
+import stinkybot.utils.daybreakutils.event.dto.parsers.DeathOrVehicleDestroy;
+import stinkybot.utils.daybreakutils.event.dto.parsers.DeathOrVehiclePayload;
 import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
 import stinkybot.utils.daybreakutils.query.dto.CensusCollectionImpl;
 import stinkybot.utils.daybreakutils.query.dto.ICensusCollection;
 import stinkybot.utils.daybreakutils.query.dto.internal.Character;
+import stinkybot.utils.daybreakutils.query.dto.internal.CharacterName;
 import stinkybot.utils.daybreakutils.query.dto.internal.*;
+import stinkybot.utils.daybreakutils.query.dto.internal.Map;
 import stinkybot.utils.daybreakutils.tree.Pair;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DaybreakApiQuery {
@@ -92,7 +96,7 @@ public class DaybreakApiQuery {
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_WEAPON_STAT_BY_FACTION, serviceId)
                 .filter(CC.CHARACTER_ID, id).limit(2000)
                 .filter(CC.ITEM_ID, SearchModifier.NOT, "0", "650", "432", "44605", "429", "800623", "1095"
-                        , "881", "6008686", "50560", "34002", "85", "13", "25004", "25000","25001","39001","39002",
+                        , "881", "6008686", "50560", "34002", "85", "13", "25004", "25000", "25001", "39001", "39002",
                         "86", "88", "16031", "804652", "804179", "15001")
                 .filter("vehicle_id", "0")
                 .filter("stat_name", "weapon_kills", "weapon_headshots")
@@ -113,7 +117,7 @@ public class DaybreakApiQuery {
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId)
                 .filter(CC.CHARACTER_ID, id).limit(2000)
                 .filter(CC.ITEM_ID, SearchModifier.NOT, "0", "650", "432", "44605", "429", "800623", "1095"
-                        , "881", "6008686", "50560", "34002", "85", "25004", "25000","25001","39001","39002",
+                        , "881", "6008686", "50560", "34002", "85", "25004", "25000", "25001", "39001", "39002",
                         "13", "86", "88", "16031", "804652", "804179", "15001")
                 .filter("vehicle_id", "0")
                 .filter("stat_name", "weapon_fire_count", "weapon_hit_count")
@@ -193,22 +197,6 @@ public class DaybreakApiQuery {
         });
         return list1;
     }
-
-    public static List<DirectiveTier> getDirectiveTier() throws IOException, CensusInvalidSearchTermException {
-        List<ICensusCollection> list = new Query(Collection.DIRECTIVE_TIER, serviceId)
-                .limit(10000)
-                .getAndParse();
-
-        if (list == null || list.isEmpty()) {
-            return null;
-        }
-        List<DirectiveTier> list1 = new ArrayList<>();
-        list.forEach(coll -> {
-            list1.add((DirectiveTier) coll);
-        });
-        return list1;
-    }
-
 
     public static List<ICensusCollection> getPLayerWeaponStats(String characterId, String weaponId) throws IOException, CensusInvalidSearchTermException {
         List<ICensusCollection> list2 = new Query(Collection.CHARACTERS_WEAPON_STAT_BY_FACTION, serviceId)
@@ -515,19 +503,6 @@ public class DaybreakApiQuery {
         return stinkybot.utils.daybreakutils.enums.Faction.findFaction(Integer.parseInt(((Character) list.get(0)).getFaction_id()));
     }
 
-    public static stinkybot.utils.daybreakutils.enums.Faction getCharacterFactionById(String id)
-            throws CensusInvalidSearchTermException, IOException {
-        Query q = new Query(Collection.CHARACTER, serviceId).filter(CC.CHARACTER_ID, id).show("faction_id");
-
-        List<ICensusCollection> list = q.getAndParse();
-
-        if (list == null || list.isEmpty()) {
-            return null;
-        }
-
-        return stinkybot.utils.daybreakutils.enums.Faction.findFaction(Integer.parseInt(((Character) list.get(0)).getFaction_id()));
-    }
-
     /**
      * 1) character id
      * 2) character name
@@ -689,5 +664,121 @@ public class DaybreakApiQuery {
         return (MetagameEventState) list.get(0);
     }
 
+    public static DeathVehicleKillMapper getDeathVehicleDestroyEventInfo(List<DeathOrVehiclePayload> events)
+            throws IOException, CensusInvalidSearchTermException {
+        Set<String> charIds = new HashSet<>();
+        Set<String> loadOutIds = new HashSet<>();
+        Set<String> vehicleIds = new HashSet<>();
+        Set<String> weaponIds = new HashSet<>();
+        for (DeathOrVehiclePayload event : events) {
+            DeathOrVehicleDestroy payload = event.getPayload();
+            charIds.add(payload.getAttacker_character_id());
+            charIds.add(payload.getCharacter_id());
+            if (StringUtils.isNotBlank(payload.getAttacker_loadout_id())) {
+                loadOutIds.add(payload.getAttacker_loadout_id());
+            }
+            if (StringUtils.isNotBlank(payload.getCharacter_loadout_id())) {
+                loadOutIds.add(payload.getCharacter_loadout_id());
+            }
+            if (StringUtils.isNotBlank(payload.getVehicle_id())) {
+                vehicleIds.add(payload.getVehicle_id());
+            }
+            if (StringUtils.isNotBlank(payload.getAttacker_vehicle_id())) {
+                vehicleIds.add(payload.getAttacker_vehicle_id());
+            }
+            if (StringUtils.isNotBlank(payload.getAttacker_weapon_id())) {
+                weaponIds.add(payload.getAttacker_weapon_id());
+            }
+        }
+
+        List<ICensusCollection> loadOutList = new Query(Collection.LOADOUT, serviceId)
+                .filter("loadout_id", loadOutIds.toArray(new String[0])).limit(5000)
+                .getAndParse();
+
+        if (loadOutList == null || loadOutList.isEmpty()) {
+            return null;
+        }
+
+        List<ICensusCollection> vehicleList = new Query(Collection.VEHICLE, serviceId)
+                .filter("vehicle_id", vehicleIds.toArray(new String[0])).limit(5000)
+                .getAndParse();
+
+        if (vehicleList == null || vehicleList.isEmpty()) {
+            return null;
+        }
+
+//        List<ICensusCollection> weaponList = new Query(Collection.ITEM_TO_WEAPON, serviceId)
+//                .filter("item_id", weaponIds.toArray(new String[0])).limit(5000)
+//                .join(new Join(Collection.ITEM).on(CC.ITEM_ID).inject_at("item").show("name"))
+//                .getAndParse();
+        List<ICensusCollection> weaponList = new Query(Collection.ITEM, serviceId)
+                .filter(CC.ITEM_ID, weaponIds.toArray(new String[0])).limit(5000)
+                .getAndParse();
+
+        if (weaponList == null || weaponList.isEmpty()) {
+            return null;
+        }
+
+        List<Set<String>> listOfSets = new LinkedList<>();
+        java.util.Map<String, Character> charMap = new HashMap<>();
+        int K5 = 5000;
+        int loops = charIds.size() / K5 + 1;
+        for (int index = 0, i = 0; i < loops; i++, index += K5) {
+            Set<String> set = charIds.stream().skip(index).limit(K5).collect(Collectors.toSet());
+            listOfSets.add(set);
+        }
+        for (Set<String> charSet : listOfSets) {
+            List<ICensusCollection> charsList = new Query(Collection.CHARACTER, serviceId)
+                    .filter(CC.CHARACTER_ID, charSet.toArray(new String[0])).show(CC.CHARACTER_ID, CC.NAME, "faction_id", "profile_id", "battle_rank").limit(5000)
+                    .join(new Join(Collection.OUTFIT_MEMBER_EXTENDED).on(CC.CHARACTER_ID).inject_at("outfit").show("alias"))
+                    .getAndParse();
+            if (charsList == null || charsList.isEmpty()) {
+                return null;
+            }
+            charMap.putAll(
+                    charsList.stream().collect(Collectors.toMap(
+                    character -> ((Character) character).getCharacter_id(),
+                    character -> (Character) character))
+            );
+        }
+        DeathVehicleKillMapper deathVehicleKillMapper = new DeathVehicleKillMapper();
+
+        deathVehicleKillMapper.setCharacters(charMap);
+
+        deathVehicleKillMapper.setLoadOuts(
+                loadOutList.stream().collect(Collectors.toMap(
+                        loadOut -> ((Loadout) loadOut).getLoadout_id(),
+                        loadOut -> (Loadout) loadOut))
+        );
+
+        deathVehicleKillMapper.setVehicles(
+                vehicleList.stream().collect(Collectors.toMap(
+                        vehicle -> ((Vehicle) vehicle).getVehicle_id(),
+                        vehicle -> (Vehicle) vehicle))
+        );
+
+
+//        java.util.Map<String, String> weaponsMap = new HashMap<>();
+//        for (ICensusCollection collection : weaponList) {
+//            String weaponId = ((ItemToWeapon) collection).getWeapon_id();
+//            Item item = (Item) collection.getNested().get(0);
+//            String weaponName = item.getName().getEn();
+//            weaponsMap.putIfAbsent(weaponId, weaponName);
+//        }
+        deathVehicleKillMapper.setWeapons(
+                weaponList.stream().collect(Collectors.toMap(
+                        weapon -> ((Item) weapon).getItem_id(),
+                        weapon -> ((Item) weapon).getName().getEn())
+        ));
+
+//        deathVehicleKillMapper.setWeapons(
+//                weaponList.stream().collect(Collectors.toMap(
+//                        weapon -> ((Weapon)weapon).getWeapon_id() ,
+//                        weapon -> (Weapon)weapon))
+//        );
+
+
+        return deathVehicleKillMapper;
+    }
 
 }

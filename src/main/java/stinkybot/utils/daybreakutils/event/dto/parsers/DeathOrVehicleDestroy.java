@@ -1,5 +1,7 @@
 package stinkybot.utils.daybreakutils.event.dto.parsers;
 
+import stinkybot.commandlisteners.utilities.CC;
+
 public class DeathOrVehicleDestroy {
 
     private String event_name;
@@ -16,9 +18,6 @@ public class DeathOrVehicleDestroy {
     private String vehicle_id;
     private String world_id;
     private String zone_id;
-
-    public DeathOrVehicleDestroy() {
-    }
 
     public String getAttacker_character_id() {
         return attacker_character_id;

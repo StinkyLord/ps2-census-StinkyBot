@@ -8,8 +8,7 @@ public enum Zone {
 	VR_NC(96, "VR(NC)"),
 	VR_TR(97, "VR(TR)"),
 	VR_VS(98, "VR(VS)"),
-	KOLTYR(-1, "Koltyr"),
-	DESOLATION(-1, "Desolation");
+	DESOLATION(-1, "Koltyr or Desolation");
 	
 	private int id;
 	private String name;
