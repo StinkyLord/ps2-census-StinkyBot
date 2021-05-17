@@ -77,6 +77,19 @@ public class SqlConnector {
         return list;
     }
 
-
+    public String selectMaxIdFromDeathEvents() {
+        String getMaxQuery = "SELECT id FROM deathevents WHERE id=(SELECT max(id) FROM deathevents)";
+        String result = "0";
+        try (Connection conn = DriverManager.getConnection(sqlUrl, sqlUser, sqlPass);
+             PreparedStatement ps = conn.prepareStatement(getMaxQuery)) {
+            ResultSet resultSet = ps.executeQuery();
+            while (resultSet.next()) {
+                result = resultSet.getString("id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
 
 }

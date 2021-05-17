@@ -721,10 +721,10 @@ public class DaybreakApiQuery {
 
         List<Set<String>> listOfSets = new LinkedList<>();
         java.util.Map<String, Character> charMap = new HashMap<>();
-        int K5 = 5000;
-        int loops = charIds.size() / K5 + 1;
-        for (int index = 0, i = 0; i < loops; i++, index += K5) {
-            Set<String> set = charIds.stream().skip(index).limit(K5).collect(Collectors.toSet());
+        int splitter = 300;
+        int loops = charIds.size() / splitter + 1;
+        for (int index = 0, i = 0; i < loops; i++, index += splitter) {
+            Set<String> set = charIds.stream().skip(index).limit(splitter).collect(Collectors.toSet());
             listOfSets.add(set);
         }
         for (Set<String> charSet : listOfSets) {

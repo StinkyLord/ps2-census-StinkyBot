@@ -10,6 +10,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import stinkybot.apiQuery.DaybreakApiEvents;
 import stinkybot.apiQuery.DaybreakApiQuery;
+import stinkybot.utils.SqlConnector;
 import stinkybot.utils.daybreakutils.anatomy.commands.DeathEvent;
 import stinkybot.utils.daybreakutils.anatomy.commands.DeathVehicleKillMapper;
 import stinkybot.utils.daybreakutils.anatomy.commands.IvIModel;
@@ -33,12 +34,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class AppTest {
+
+    public static final String SEMI_COLON = ";";
+    public static final String OPEN_BRACKET = "(";
+    public static final String CLOSE_BRACKET_COMMAA = "),";
+    public static final String COMMA = ",";
+    public static final String ACA = "','";
+    public static final String CLOSE_BRACKET = ")";
+    public static final String DASH = "-";
+    public static final String APOSTROPHE = "'";
+
     @Ignore
     @Test
     public void shouldAnswerWithTrue() throws IOException, CensusInvalidSearchTermException {
 
 //        List<String> members = DaybreakApiQuery.getCharacterIdsFromOutfitTag("BRTD");
-        String session = "philipTest";
+        String session = "philipTest2";
         String killDeath = session + "_" + RandomStringUtils.random(6, 'A', 'Z' + 1, false, false);
         String gainExp = session + "_" + RandomStringUtils.random(6, 'A', 'Z' + 1, false, false);
         String playerLogger = session + "_" + RandomStringUtils.random(6, 'A', 'Z' + 1, false, false);
@@ -53,15 +64,18 @@ public class AppTest {
              BufferedWriter bw3 = new BufferedWriter(streamWriter3)
         ) {
             DaybreakApiEvents.streamAllEventsForStinkyBot(
-                    bw, bw2, bw3, 0, 5, new String[]{GenericCharacter.ALL.toString()});
+                    bw, bw2, bw3, 0, 50, new String[]{GenericCharacter.ALL.toString()});
             TimeUnit.SECONDS.sleep(10);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         List<DeathOrVehiclePayload> deathOrVehiclePayloads = parseJsonFile(killDeath, DeathOrVehiclePayload.class);
-        List<GainExperiencePayload> gainExperiencePayloads = parseJsonFile(gainExp, GainExperiencePayload.class);
-        List<LogInOrLogOutPayload> logInOrLogOutPayloads = parseJsonFile(playerLogger, LogInOrLogOutPayload.class);
+        FileUtils.forceDelete(new File(gainExp));
+        FileUtils.forceDelete(new File(playerLogger));
+//        List<GainExperiencePayload> gainExperiencePayloads = parseJsonFile(gainExp, GainExperiencePayload.class);
+//        List<LogInOrLogOutPayload> logInOrLogOutPayloads = parseJsonFile(playerLogger, LogInOrLogOutPayload.class);
+
 
         DeathVehicleKillMapper deathMapper = DaybreakApiQuery.getDeathVehicleDestroyEventInfo(deathOrVehiclePayloads);
         if (deathMapper == null) {
@@ -69,11 +83,48 @@ public class AppTest {
         }
         List<DeathEvent> deathEvents = convertInfoDeathEvents(deathOrVehiclePayloads, deathMapper);
         insertDeathEventsIntoDatabase(deathEvents, session);
-
     }
 
     private void insertDeathEventsIntoDatabase(List<DeathEvent> deathEvents, String session) {
-
+        SqlConnector sql = SqlConnector.getInstance();
+        String maxId = sql.selectMaxIdFromDeathEvents();
+        int total = deathEvents.size();
+        int K1 = 1000;
+        int loops = total / K1 + 1;
+        int maxIdOld = Integer.parseInt(maxId);
+        int currentId = maxIdOld;
+        for (int index = 0, i = 0; i < loops; i++, index += K1) {
+            List<DeathEvent> list = deathEvents.stream().skip(index).limit(K1).collect(Collectors.toList());
+            StringBuilder sb = new StringBuilder("INSERT INTO deathevents VALUES");
+            for (DeathEvent e : list) {
+                currentId += 1;
+                sb.append(OPEN_BRACKET).append(APOSTROPHE);
+                sb.append(currentId).append(ACA);
+                sb.append(session).append(ACA);
+                sb.append(e.getEventName()).append(ACA);
+                sb.append(e.getTimestamp()).append(ACA);
+                sb.append(e.getAttackerName()).append(ACA);
+                sb.append(e.getAttackerClass()).append(ACA);
+                sb.append(e.getAttackerVehicle()).append(ACA);
+                sb.append(e.getAttackerWeapon()).append(ACA);
+                sb.append(e.getAttackerOutfit()).append(ACA);
+                sb.append(e.getAttackerFaction()).append(ACA);
+                sb.append(e.getVictimName()).append(ACA);
+                sb.append(e.getVictimOutfit()).append(ACA);
+                sb.append(e.getVictimClass()).append(ACA);
+                sb.append(e.getVictimFaction()).append(ACA);
+                sb.append(e.getVehicleName()).append(ACA);
+                sb.append(e.getWorldName()).append(ACA);
+                sb.append(e.getZoneName()).append(ACA);
+                sb.append(e.isHeadshot()).append(APOSTROPHE);
+                sb.append(CLOSE_BRACKET_COMMAA);
+            }
+            String query = sb.deleteCharAt(sb.length() - 1).toString();
+            sql.updateQuery(query);
+        }
+        String sb2 = "INSERT INTO sessiondeathevents VALUES (" +
+                APOSTROPHE + session + ACA + maxIdOld + DASH + currentId + APOSTROPHE + CLOSE_BRACKET;
+        sql.updateQuery(sb2);
     }
 
     private List<DeathEvent> convertInfoDeathEvents(List<DeathOrVehiclePayload> events, DeathVehicleKillMapper mapper) {
@@ -149,7 +200,11 @@ public class AppTest {
                     if (codeName != null) {
                         sqlEvent.setAttackerClass(codeName);
                     }
+                } else {
+                    sqlEvent.setAttackerClass("N/A");
                 }
+            } else {
+                sqlEvent.setAttackerClass("N/A");
             }
             String vehicleId = payload.getVehicle_id();
             if (vehicleId != null) {
