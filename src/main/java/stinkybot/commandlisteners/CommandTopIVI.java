@@ -62,6 +62,9 @@ public class CommandTopIVI implements CommandInterface {
             return null;
         }
             for (CharactersWeaponStatByFaction charStat : headshotRateRes) {
+                if(charStat.getNested().isEmpty()){
+                    continue;
+                }
                 Item item = (Item) charStat.getNested().get(0);
                 String catId = item.getItem_category_id();
 
