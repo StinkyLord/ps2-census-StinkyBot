@@ -33,7 +33,8 @@ public class CommandRecord implements CommandInterface {
 
     @Override
     public String getDescription() {
-        return "records events from PS2 for a certain timeframe";
+        return "records events from PS2 for a certain timeframe, \n" +
+                "usage: ~record [session name] [sleep for X minutes] [record for X minutes]";
     }
 
     @Override
@@ -78,7 +79,16 @@ public class CommandRecord implements CommandInterface {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-//            {"payload":{"amount":"250","character_id":"5429119940639123633","event_name":"GainExperience","experience_id":"291","loadout_id":"31","other_id":"0","timestamp":"1618049949","world_id":"17","zone_id":"6"},"service":"event","type":"serviceMessage"}
+//            {"payload":{"amount":"250",
+//            "character_id":"5429119940639123633",
+//            "event_name":"GainExperience",
+//            "experience_id":"291",
+//            "loadout_id":"31",
+//            "other_id":"0",
+//            "timestamp":"1618049949",
+//            "world_id":"17",
+//            "zone_id":"6"},
+//            "service":"event","type":"serviceMessage"}
             List<DeathOrVehiclePayload> deathOrVehiclePayloads = parseJsonFile(killDeath, DeathOrVehiclePayload.class);
             List<GainExperiencePayload> gainExperiencePayloads =  parseJsonFile(gainExp, GainExperiencePayload.class);
             List<LogInOrLogOutPayload> logInOrLogOutPayloads = parseJsonFile(playerLogger, LogInOrLogOutPayload.class);
