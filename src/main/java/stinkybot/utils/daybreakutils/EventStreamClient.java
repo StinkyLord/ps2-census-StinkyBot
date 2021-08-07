@@ -1,8 +1,7 @@
 package stinkybot.utils.daybreakutils;
-
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -22,7 +21,7 @@ import okhttp3.Request;
 import okhttp3.WebSocket;
 
 /**
- * 
+ *
  * This is a wrapper class for the WebSocket connection to the Census API Event Stream.<br>
  * Events are handled by the {@link EventStreamListener}s registered in this client.
  * <p>
@@ -33,7 +32,7 @@ import okhttp3.WebSocket;
  * <li>{@link EventStreamListener#onClosing(int, String)}</li>
  * <li>{@link EventStreamListener#onClosed(int, String)}</li>
  * </ul>
- * 
+ *
  * <p>
  * or:<br>
  * <ul>
@@ -41,7 +40,7 @@ import okhttp3.WebSocket;
  * <li>[{@link EventStreamListener#onMessage(JsonNode)}, ...]</li>
  * <li>{@link EventStreamListener#onFailure(Throwable, okhttp3.Response)}</li>
  * </ul>
- * 
+ *
  * <p>
  * If a disconnect occurs, the connection will stay open for 3 heartbeats or roughly 90 seconds.<br>
  * After 3 heartbeats the client will close the connection. <br>
@@ -50,7 +49,7 @@ import okhttp3.WebSocket;
  * If such a disconnect has occurred, the connection can be reestablished by calling the {@link EventStreamClient#resume()} method.<br>
  * <p>
  * To subscribe to an event either call the corresponding {@link EventStreamClient}.subscribe(...) method or manually generate a subscription message using {@link EventMessageBuilder#build()}.
- * All successful subscriptions are stored in a local variable, 
+ * All successful subscriptions are stored in a local variable,
  * 	so that if the connection is closed it can be directly resumed, without having to manually resubscribe to all events.
  * <p>
  * Unsubscribing from an event also removes the event from the backup variable.<br>
@@ -77,18 +76,18 @@ public final class EventStreamClient implements Closeable {
 	private String service_id = Constants.EXAMPLE_SERVICE_ID.toString();
 	private EventEnvironment env = EventEnvironment.PS2;
 	private boolean isWaiting = false;
-	
+
 	private EventMessageBuilder backupBuilder = new EventMessageBuilder(EventStreamAction.SUBSCRIBE);
-	
+
 	private void setEventStreamHandler(EventStreamHandler handler) {
 		this.handler = handler;
 	}
-	
+
 	private EventStreamClient() {
 		client = CensusHttpClient.getHttpClient();
 	}
-	
-	
+
+
 	/**
 	 * Asynchronously establishes a connection with the Census API Event Stream according to the set parameters.
 	 * @param env The Environment to connect to (PC, PS4)
@@ -100,12 +99,13 @@ public final class EventStreamClient implements Closeable {
 		if (handler == null || env == null || service_id == null) return false;
 		this.env = env;
 		this.service_id = service_id;
+		if (handler.isClosed()) handler.resume();
 		webSocket = client.newWebSocket(new Request.Builder()
 				.url(Constants.PUSH_ENDPOINT + "?environment=" + env + "&service-id=" + Constants.SERVICE_ID_PREFIX + service_id)
 				.build(), handler);
 		return true;
 	}
-	
+
 	/**
 	 * Asynchronously establishes a connection with the Census API Event Stream according to the set parameters.
 	 * @param env The Environment to connect to (PC, PS4)
@@ -115,7 +115,7 @@ public final class EventStreamClient implements Closeable {
 	public synchronized boolean connect(EventEnvironment env) {
 		return connect(env, service_id);
 	}
-	
+
 	/**
 	 * Asynchronously establishes a connection with the Census API Event Stream according to the set parameters.
 	 * @return true when a new WebSocket has been created
@@ -124,7 +124,7 @@ public final class EventStreamClient implements Closeable {
 	public synchronized boolean connect() {
 		return connect(env);
 	}
-	
+
 	/**
 	 * Synchronously establishes a connection with the Census API Event Stream according to the set parameters.
 	 * @param env The Environment to connect to (PC, PS4)
@@ -134,13 +134,17 @@ public final class EventStreamClient implements Closeable {
 		isWaiting = true;
 		connect(env,service_id);
 		try {
+			//System.out.println("Waiting for connection");
 			wait();
+			//System.out.println("Finished waiting");
 		} catch (InterruptedException e) {
+			//System.out.println("Wait has been interrupted");
+			e.printStackTrace();
 			Thread.interrupted();
 			handler.onException(e);
 		}
 	}
-	
+
 	/**
 	 * Synchronously establishes a connection with the Census API Event Stream according to the set parameters.
 	 * @param env The Environment to connect to (PC, PS4)
@@ -148,17 +152,17 @@ public final class EventStreamClient implements Closeable {
 	public synchronized void awaitConnection(EventEnvironment env) {
 		awaitConnection(env, service_id);
 	}
-	
+
 	/**
 	 * Synchronously establishes a connection with the Census API Event Stream according to the set parameters.
 	 */
 	public synchronized void awaitConnection() {
 		awaitConnection(env);
 	}
-	
-	
+
+
 	/**
-	 * 
+	 *
 	 * @return Instance of the {@link EventStreamClient} object.
 	 */
 	public static synchronized EventStreamClient getInstance() {
@@ -168,7 +172,18 @@ public final class EventStreamClient implements Closeable {
 		}
 		return instance;
 	}
-	
+
+	/**
+	 * Cancels the connection, releases resources and discards all enqueued messages
+	 */
+	public void cancel() {
+		if (webSocket != null) {
+			webSocket.cancel();
+			handler.close();
+			webSocket = null;
+		}
+	}
+
 	/**
 	 * Closes the connection
 	 * @param code
@@ -180,38 +195,53 @@ public final class EventStreamClient implements Closeable {
 		boolean tmp = false;
 		if (webSocket != null) {
 			tmp = webSocket.close(code, reason);
-			
+			handler.close();
 			webSocket = null;
 		}
 		return tmp;
 	}
-	
+
 	/**
 	 * Closes the connection with code 1000 and reason "closing"
 	 */
 	public synchronized void close() throws IOException {
 		close(1000,"closing");
 	}
-	
+
 	/**
 	 * Resumes the connection if the connection is closed or cancelled
 	 * @return true if the connection is/was closed or cancelled
 	 */
 	public synchronized boolean resume() {
 		if (webSocket == null) {
-			handler.resume();
 			connect();
 			try {
 				return sendMessage(backupBuilder.build());
 			} catch (IOException e) {
-				//ignore
+				e.printStackTrace();
 			}
 		}
 		return false;
 	}
-	
-	
-	
+
+	/**
+	 * (Synchronous) Resets the connection and resends the subscription message
+	 * @return true if the reset was successful
+	 * @throws IOException
+	 */
+	public synchronized boolean resetConnection() throws IOException {
+		if (webSocket == null) {
+			handler.resume();
+		} else {
+			cancel();
+			client.connectionPool().evictAll();
+			//System.out.println("Websocket: " + webSocket);
+		}
+
+		return resume();
+	}
+
+
 	synchronized void resetWaiting() {
 		this.isWaiting = false;
 	}
@@ -243,12 +273,12 @@ public final class EventStreamClient implements Closeable {
 	public EventMessageBuilder getBackupBuilder() {
 		return backupBuilder;
 	}
-	
+
 	public EventStreamHandler getEventStreamHandler() {
 		return handler;
 	}
-	
-	
+
+
 	/**
 	 * Adds an {@link EventStreamListener} to the client
 	 * @param listener
@@ -268,7 +298,7 @@ public final class EventStreamClient implements Closeable {
 		if (handler == null) return false;
 		return handler.unregister(listener);
 	}
-	
+
 	/**
 	 * Sends a JSON format String message to the Census API Event Stream server.
 	 * @param message
@@ -277,9 +307,10 @@ public final class EventStreamClient implements Closeable {
 	 */
 	public synchronized boolean sendMessage(String message) throws IOException {
 		if (webSocket == null) throw new IOException("Websocket is not connected");
+		//System.out.println("Sending Message: " + message);
 		return webSocket.send(message);
 	}
-	
+
 	/**
 	 * Sends a JSON format {@link JsonNode} message to the Census API Event Stream server.
 	 * @param node
@@ -289,7 +320,7 @@ public final class EventStreamClient implements Closeable {
 	public synchronized boolean sendMessage(JsonNode node) throws IOException {
 		return sendMessage(node.toString());
 	}
-	
+
 	/**
 	 * Sends a help message to the Census API Event Stream server.
 	 * @return true if message was sent or queued
@@ -298,7 +329,7 @@ public final class EventStreamClient implements Closeable {
 	public boolean sendHelpRequest() throws IOException {
 		return sendMessage("{\"service\":\"event\",\"action\":\"help\"}");
 	}
-	
+
 	/**
 	 * Sends a subscription message.
 	 * @param world The world to subscribe to
@@ -312,7 +343,7 @@ public final class EventStreamClient implements Closeable {
 				.events(event)
 				.build());
 	}
-	
+
 	/**
 	 * Sends a subscription message.
 	 * @param character The character id or a {@link GenericCharacter} to subscribe to
@@ -326,7 +357,7 @@ public final class EventStreamClient implements Closeable {
 				.events(event)
 				.build());
 	}
-	
+
 	/**
 	 * Sends a subscription message with logicalAndCharactersWithWorlds set to true.
 	 * @param world The world to subscribe to
@@ -343,12 +374,12 @@ public final class EventStreamClient implements Closeable {
 				.logicalAndCharactersWithWorlds(true)
 				.build());
 	}
-	
+
 	/**
 	 * Clears all subscriptions.
 	 * @return true if message was sent or queued
 	 * @throws IOException if the websocket is not connected
-	 * @throws IllegalArgumentException 
+	 * @throws IllegalArgumentException
 	 */
 	public boolean unsubscribeAll() throws IllegalArgumentException, IOException {
 		backupBuilder = new EventMessageBuilder(EventStreamAction.SUBSCRIBE);
@@ -356,7 +387,7 @@ public final class EventStreamClient implements Closeable {
 				.all(true)
 				.build());
 	}
-	
+
 	/**
 	 * Unsubscribe from a specific event, character and/or world.
 	 * <br> If all passed parameters are null the method unsubscribeAll will be called.
@@ -365,15 +396,15 @@ public final class EventStreamClient implements Closeable {
 	 * @param eventNames
 	 * @return true if message was sent or queued
 	 * @throws IOException if the websocket is not connected
-	 * @throws IllegalArgumentException 
+	 * @throws IllegalArgumentException
 	 */
-	public boolean unsubscribe(@Nullable List<String> worlds,@Nullable List<String> characters,@Nullable List<String> eventNames) throws IllegalArgumentException, IOException {
+	public boolean unsubscribe(@Nullable Set<String> worlds,@Nullable Set<String> characters,@Nullable Set<String> eventNames) throws IllegalArgumentException, IOException {
 		EventMessageBuilder builder = new EventMessageBuilder(EventStreamAction.CLEAR_SUBSCRIBE);
-		if ((worlds == null || worlds.isEmpty()) 
+		if ((worlds == null || worlds.isEmpty())
 				&& (characters == null || characters.isEmpty())
 				&& (eventNames == null || eventNames.isEmpty()))
 			return unsubscribeAll();
-		
+
 		else {
 			if (worlds != null) {
 				builder.setWorlds(worlds);
@@ -390,7 +421,7 @@ public final class EventStreamClient implements Closeable {
 			return sendMessage(builder.build());
 		}
 	}
-	
+
 	/**
 	 * Sets the logicalAndCharactersWithWorlds variable to false
 	 * @return true if message was sent or queued
@@ -400,13 +431,21 @@ public final class EventStreamClient implements Closeable {
 		backupBuilder.setLogicalAndCharactersWithWorlds(false);
 		return sendMessage(new EventMessageBuilder(EventStreamAction.CLEAR_SUBSCRIBE).logicalAndCharactersWithWorlds(false).build());
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @return true if Websocket is connected
 	 */
 	public boolean isConnected() {
 		return webSocket != null;
 	}
-	
+
+	/**
+	 *
+	 * @return number of missed heartbeats
+	 */
+	public long getMissedHeartbeats() {
+		return handler.getMissedHeartbeats();
+	}
+
 }

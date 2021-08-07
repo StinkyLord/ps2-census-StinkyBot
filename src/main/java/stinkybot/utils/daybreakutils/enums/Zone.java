@@ -8,24 +8,28 @@ public enum Zone {
 	VR_NC(96, "VR(NC)"),
 	VR_TR(97, "VR(TR)"),
 	VR_VS(98, "VR(VS)"),
-	DESOLATION(-1, "Koltyr or Desolation");
-	
+	KOLTYR(-1, "Koltyr"),
+	DESOLATION(-1, "Desolation");
+
 	private int id;
 	private String name;
-	
+
+	public static final long DESOLATION_DEFINITIONID = 361;
+	public static final long KOLTYR_DEFINITIONID = 14;
+
 	private Zone(int id, String name) {
 		this.id = id;
 		this.name = name;
 	}
-	
+
 	public int getZoneId() {
 		return id;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public static Zone findZone(int zone_id) {
 		for (Zone zone : Zone.values()) {
 			if (zone.getZoneId() == zone_id) {
@@ -34,7 +38,7 @@ public enum Zone {
 		}
 		return null;
 	}
-	
+
 	public static Zone findZone(String name) {
 		for (Zone zone : Zone.values()) {
 			if (zone.getName().equals(name)) {
@@ -43,26 +47,20 @@ public enum Zone {
 		}
 		return null;
 	}
-	/*
-	public static boolean isDesolation(String worldId, String zoneId) {
-		boolean tmp = false;
-		if (Integer.parseInt(zoneId) > 100) {
-			try {
-				tmp = new PS2CensusWrapper().getRegionCount(worldId, zoneId) == 27;
-			} catch (ServiceUnavailableException | IOException | PS2CensusBadParametersException e) {
-				logger.error(e.getMessage(), e);
-			}
-		}
-		return tmp;
+
+	public static boolean isDesolation(long zone_id) {
+		return (0x0000FFFF & zone_id) == DESOLATION_DEFINITIONID;
 	}
-	
-	public static boolean isKoltyr(String worldId, String zoneId) {
-		boolean tmp = false;
-		try {
-			tmp = new PS2CensusWrapper().getRegionCount(worldId, zoneId) == 9;
-		} catch (ServiceUnavailableException | IOException | PS2CensusBadParametersException e) {
-			logger.error(e.getMessage(), e);
-		}
-		return tmp;
-	}*/
+
+	public static boolean isKoltyr(long zone_id) {
+		return (0x0000FFFF & zone_id) == KOLTYR_DEFINITIONID;
+	}
+
+	public static long calcInstanceId(long zone_id) {
+		return (0xFFFF0000 & zone_id) >>> 16;
+	}
+
+	public static long calcZoneId(long instance_id, long definition_id) {
+		return (instance_id << 16) & definition_id;
+	}
 }
