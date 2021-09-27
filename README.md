@@ -1,5 +1,10 @@
 # StinkyBot
 
+This bot is made specifically to give information about characters in planetside 2 game, 
+it can also record events by using a command from discord.
+
+**Still Under Developement**
+
 How to use:
 
 create a census daybreak service id
