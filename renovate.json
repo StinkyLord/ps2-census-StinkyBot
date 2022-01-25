@@ -1,0 +1,12 @@
+{
+  "extends": [
+    "config:base"
+  ],
+  "dockerfile": {
+    "enabled": false
+  },
+  "dependencyDashboard": true,
+  "dependencyDashboardApproval": true,
+  "reviewers": ["StinkyLord"],
+  "baseBranches": ["master"]
+}
