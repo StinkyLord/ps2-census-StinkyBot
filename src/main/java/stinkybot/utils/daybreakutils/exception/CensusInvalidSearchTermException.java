@@ -1,22 +1,28 @@
 package stinkybot.utils.daybreakutils.exception;
 
-import com.fasterxml.jackson.databind.JsonNode;
+public class CensusInvalidSearchTermException extends CensusException {
 
-public class CensusInvalidSearchTermException extends Exception {
+    private String namespace;
+    private String collection;
+    private String field;
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = -8644016120503500021L;
-    private String errorCode;
-
-    public CensusInvalidSearchTermException(JsonNode node) {
-        super(node.path("errorMessage").asText());
-        errorCode = node.path("errorCode").asText();
+    protected CensusInvalidSearchTermException(String errMessage, String url, String namespace, String collection,
+                                               String field) {
+        super(errMessage, url);
+        this.namespace = namespace;
+        this.collection = collection;
+        this.field = field;
     }
 
-    @Override
-    public String getMessage() {
-        return "[" + errorCode + "] " + super.getMessage();
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public String getCollection() {
+        return collection;
+    }
+
+    public String getField() {
+        return field;
     }
 }

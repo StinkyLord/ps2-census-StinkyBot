@@ -16,7 +16,7 @@ public class MetagameEvent extends EventPayloadObject {
 	private String instance_id;
 	private String zone_id;
 
-
+	
 	public MetagameEvent() {
 		super("MetagameEvent");
 	}
@@ -130,7 +130,6 @@ public class MetagameEvent extends EventPayloadObject {
 				+ metagame_event_state_name + ", timestamp=" + timestamp + ", world_id=" + world_id + ", instance_id="
 				+ instance_id + ", zone_id=" + zone_id + "]";
 	}
-
 
 	public String getZone_id() {
 		return zone_id;

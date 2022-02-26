@@ -10,7 +10,7 @@ import stinkybot.utils.daybreakutils.anatomy.SearchModifier;
 import stinkybot.utils.daybreakutils.anatomy.commands.DeathVehicleKillMapper;
 import stinkybot.utils.daybreakutils.event.dto.parsers.DeathOrVehicleDestroy;
 import stinkybot.utils.daybreakutils.event.dto.parsers.DeathOrVehiclePayload;
-import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
+import stinkybot.utils.daybreakutils.exception.CensusException;
 import stinkybot.utils.daybreakutils.query.dto.CensusCollectionImpl;
 import stinkybot.utils.daybreakutils.query.dto.ICensusCollection;
 import stinkybot.utils.daybreakutils.query.dto.internal.Character;
@@ -27,13 +27,13 @@ public class DaybreakApiQuery {
 
     public static final String serviceId = SettingsReader.getInstance().getSettings().getDaybreakServiceId();
 
-    public static int getRegionCount(String worldId, String zoneId) throws CensusInvalidSearchTermException, IOException {
+    public static int getRegionCount(String worldId, String zoneId) throws CensusException, IOException {
         Query q = new Query(Collection.MAP, serviceId).filter("world_id", worldId).filter("zone_ids", zoneId);
         Map col = (Map) q.getAndParse().get(0);
         return col.getRegions().getRow().size();
     }
 
-    public static Character getPlayerByName(String name) throws CensusInvalidSearchTermException, IOException {
+    public static Character getPlayerByName(String name) throws CensusException, IOException {
         Query q = new Query(Collection.CHARACTER, serviceId).filter("name.first_lower", name.toLowerCase());
         List<ICensusCollection> list = q.getAndParse();
 
@@ -43,7 +43,7 @@ public class DaybreakApiQuery {
         return (Character) list.get(0);
     }
 
-    public static CharactersWeaponStat getPlayerTopWeaponKillsByName(String name) throws IOException, CensusInvalidSearchTermException {
+    public static CharactersWeaponStat getPlayerTopWeaponKillsByName(String name) throws IOException, CensusException {
         String characterId = getPlayerIdByName(name);
         if (characterId == null) {
             return null;
@@ -68,7 +68,7 @@ public class DaybreakApiQuery {
         return (CharactersWeaponStat) list.get(0);
     }
 
-    public static CharactersWeaponStat getPlayerTopVehicleWeaponKillsByName(String name) throws IOException, CensusInvalidSearchTermException {
+    public static CharactersWeaponStat getPlayerTopVehicleWeaponKillsByName(String name) throws IOException, CensusException {
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId)
                 .filter(CC.CHARACTER_ID, getPlayerIdByName(name))
                 .filter("stat_name", "weapon_score")
@@ -89,7 +89,7 @@ public class DaybreakApiQuery {
         return (CharactersWeaponStat) list.get(0);
     }
 
-    public static List<CharactersWeaponStatByFaction> getWeaponsHeadshotRateByChar(String id) throws IOException, CensusInvalidSearchTermException {
+    public static List<CharactersWeaponStatByFaction> getWeaponsHeadshotRateByChar(String id) throws IOException, CensusException {
         if (id == null) {
             return null;
         }
@@ -110,7 +110,7 @@ public class DaybreakApiQuery {
         return list1;
     }
 
-    public static List<CharactersWeaponStat> getWeaponsAccuracyByChar(String id) throws IOException, CensusInvalidSearchTermException {
+    public static List<CharactersWeaponStat> getWeaponsAccuracyByChar(String id) throws IOException, CensusException {
         if (id == null) {
             return null;
         }
@@ -129,7 +129,7 @@ public class DaybreakApiQuery {
         return list1;
     }
 
-    public static Character test(String playerName) throws IOException, CensusInvalidSearchTermException {
+    public static Character test(String playerName) throws IOException, CensusException {
         List<ICensusCollection> list = new Query(Collection.CHARACTER, serviceId)
                 .filter("name.first_lower", playerName.toLowerCase())
                 .join(new Join(Collection.CHARACTERS_DIRECTIVE_TREE).on(CC.CHARACTER_ID).list(1).inject_at("directive_tree"))
@@ -144,7 +144,7 @@ public class DaybreakApiQuery {
         return (Character) list.get(0);
     }
 
-    public static Character getCharacterStatistics(String playerName) throws IOException, CensusInvalidSearchTermException {
+    public static Character getCharacterStatistics(String playerName) throws IOException, CensusException {
         List<ICensusCollection> list = new Query(Collection.CHARACTER, serviceId)
                 .filter("name.first_lower", playerName.toLowerCase())
                 .join(new Join(Collection.CHARACTERS_DIRECTIVE_TREE).on(CC.CHARACTER_ID).list(1).inject_at(CC.DIRECTIVE_TREE)
@@ -163,7 +163,7 @@ public class DaybreakApiQuery {
     }
 
 
-    public static List<CharactersDirectiveTree> getDirectiveTreeByCharacterName(String name) throws IOException, CensusInvalidSearchTermException {
+    public static List<CharactersDirectiveTree> getDirectiveTreeByCharacterName(String name) throws IOException, CensusException {
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_DIRECTIVE_TREE, serviceId)
                 .filter(CC.CHARACTER_ID, getPlayerIdByName(name))
                 .join(new Join(Collection.DIRECTIVE_TIER).on("directive_tree_id").list(1))
@@ -181,7 +181,7 @@ public class DaybreakApiQuery {
         return list1;
     }
 
-    public static List<CharactersDirectiveTier> getDirectiveTierByCharacterName(String name) throws IOException, CensusInvalidSearchTermException {
+    public static List<CharactersDirectiveTier> getDirectiveTierByCharacterName(String name) throws IOException, CensusException {
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_DIRECTIVE_TIER, serviceId)
                 .filter(CC.CHARACTER_ID, getPlayerIdByName(name))
                 .limit(10000)
@@ -198,7 +198,7 @@ public class DaybreakApiQuery {
         return list1;
     }
 
-    public static List<ICensusCollection> getPLayerWeaponStats(String characterId, String weaponId) throws IOException, CensusInvalidSearchTermException {
+    public static List<ICensusCollection> getPLayerWeaponStats(String characterId, String weaponId) throws IOException, CensusException {
         List<ICensusCollection> list2 = new Query(Collection.CHARACTERS_WEAPON_STAT_BY_FACTION, serviceId)
                 .filter(CC.CHARACTER_ID, characterId)
                 .filter(CC.ITEM_ID, weaponId)
@@ -209,7 +209,7 @@ public class DaybreakApiQuery {
         return list2;
     }
 
-    public static List<ICensusCollection> getPLayerVehicleWeaponStats(String characterId, String weaponId, String vehicle_id) throws IOException, CensusInvalidSearchTermException {
+    public static List<ICensusCollection> getPLayerVehicleWeaponStats(String characterId, String weaponId, String vehicle_id) throws IOException, CensusException {
         List<ICensusCollection> list2 = new Query(Collection.CHARACTERS_WEAPON_STAT_BY_FACTION, serviceId)
                 .filter(CC.CHARACTER_ID, characterId)
                 .filter(CC.ITEM_ID, weaponId)
@@ -220,7 +220,7 @@ public class DaybreakApiQuery {
         return list2;
     }
 
-    public static CharactersWeaponStat getPLayerWeaponDeaths(String characterId, String weaponId) throws IOException, CensusInvalidSearchTermException {
+    public static CharactersWeaponStat getPLayerWeaponDeaths(String characterId, String weaponId) throws IOException, CensusException {
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId)
                 .filter(CC.CHARACTER_ID, characterId)
                 .filter("stat_name", "weapon_deaths")
@@ -233,7 +233,7 @@ public class DaybreakApiQuery {
         return (CharactersWeaponStat) list.get(0);
     }
 
-    public static CharactersWeaponStat getPLayerVehicleWeaponDeaths(String characterId, String weaponId, String vehicleId) throws IOException, CensusInvalidSearchTermException {
+    public static CharactersWeaponStat getPLayerVehicleWeaponDeaths(String characterId, String weaponId, String vehicleId) throws IOException, CensusException {
         List<ICensusCollection> list = new Query(Collection.CHARACTERS_WEAPON_STAT, serviceId)
                 .filter(CC.CHARACTER_ID, characterId)
                 .filter("stat_name", "weapon_deaths")
@@ -245,7 +245,7 @@ public class DaybreakApiQuery {
         return (CharactersWeaponStat) list.get(0);
     }
 
-    public static Character getPlayerById(String id) throws CensusInvalidSearchTermException, IOException {
+    public static Character getPlayerById(String id) throws CensusException, IOException {
         Query q = new Query(Collection.CHARACTER, serviceId).filter(CC.CHARACTER_ID, id);
         List<ICensusCollection> list = q.getAndParse();
 
@@ -255,7 +255,7 @@ public class DaybreakApiQuery {
         return (Character) list.get(0);
     }
 
-    public static List<Character> getPlayersById(String... ids) throws CensusInvalidSearchTermException, IOException {
+    public static List<Character> getPlayersById(String... ids) throws CensusException, IOException {
         Query q = new Query(Collection.CHARACTER, serviceId).filter(CC.CHARACTER_ID, ids).limit(ids.length);
         List<ICensusCollection> list = q.getAndParse();
 
@@ -266,7 +266,7 @@ public class DaybreakApiQuery {
     }
 
     public static List<OutfitMemberExtended> getMemberDataById(String... ids)
-            throws CensusInvalidSearchTermException, IOException {
+            throws CensusException, IOException {
         Query q = new Query(Collection.OUTFIT_MEMBER_EXTENDED, serviceId).filter(CC.CHARACTER_ID, ids).limit(ids.length);
         List<ICensusCollection> list = q.getAndParse();
 
@@ -276,7 +276,7 @@ public class DaybreakApiQuery {
         return list.stream().map(m -> (OutfitMemberExtended) m).collect(Collectors.toList());
     }
 
-    public static String getPlayerNameById(String id) throws CensusInvalidSearchTermException, IOException {
+    public static String getPlayerNameById(String id) throws CensusException, IOException {
         Query q = new Query(Collection.CHARACTER, serviceId).filter(CC.CHARACTER_ID, id).show("name.first");
         List<ICensusCollection> list = q.getAndParse();
 
@@ -287,7 +287,7 @@ public class DaybreakApiQuery {
     }
 
     public static List<String> getPlayerIdsByNames(String... names)
-            throws CensusInvalidSearchTermException, IOException {
+            throws CensusException, IOException {
         Query q = new Query(Collection.CHARACTER, serviceId).show(CC.CHARACTER_ID).limit(names.length);
         for (String name : names) {
             q.filter("name.first_lower", name.toLowerCase());
@@ -300,7 +300,7 @@ public class DaybreakApiQuery {
         return list.stream().map(m -> ((Character) m).getCharacter_id()).collect(Collectors.toList());
     }
 
-    public static String getPlayerIdByName(String name) throws CensusInvalidSearchTermException, IOException {
+    public static String getPlayerIdByName(String name) throws CensusException, IOException {
         Query q = new Query(Collection.CHARACTER, serviceId).filter("name.first_lower", name.toLowerCase())
                 .show(CC.CHARACTER_ID);
         List<ICensusCollection> list = q.getAndParse();
@@ -311,7 +311,7 @@ public class DaybreakApiQuery {
         return ((Character) list.get(0)).getCharacter_id();
     }
 
-    public static Outfit getOutfitByTag(String tag) throws CensusInvalidSearchTermException, IOException {
+    public static Outfit getOutfitByTag(String tag) throws CensusException, IOException {
         Query q = new Query(Collection.OUTFIT, serviceId).filter("alias_lower", tag.toLowerCase());
         List<ICensusCollection> list = q.getAndParse();
 
@@ -321,7 +321,7 @@ public class DaybreakApiQuery {
         return (Outfit) list.get(0);
     }
 
-    public static Outfit getOutfitById(String id) throws CensusInvalidSearchTermException, IOException {
+    public static Outfit getOutfitById(String id) throws CensusException, IOException {
         Query q = new Query(Collection.OUTFIT, serviceId).filter("outfit_id", id);
         List<ICensusCollection> list = q.getAndParse();
 
@@ -331,7 +331,7 @@ public class DaybreakApiQuery {
         return (Outfit) list.get(0);
     }
 
-    public static String getOutfitIdByTag(String tag) throws CensusInvalidSearchTermException, IOException {
+    public static String getOutfitIdByTag(String tag) throws CensusException, IOException {
         Query q = new Query(Collection.OUTFIT, serviceId).filter("alias_lower", tag.toLowerCase()).show("outfit_id");
         List<ICensusCollection> list = q.getAndParse();
 
@@ -341,17 +341,17 @@ public class DaybreakApiQuery {
         return ((Outfit) list.get(0)).getOutfit_id();
     }
 
-    public static long getOutfitMemberCountByTag(String tag) throws CensusInvalidSearchTermException, IOException {
+    public static long getOutfitMemberCountByTag(String tag) throws CensusException, IOException {
         Query q = new Query(Collection.OUTFIT_MEMBER_EXTENDED, serviceId).filter("alias_lower", tag.toLowerCase());
         return q.count();
     }
 
-    public static long getOutfitMemberCountById(String id) throws CensusInvalidSearchTermException, IOException {
+    public static long getOutfitMemberCountById(String id) throws CensusException, IOException {
         Query q = new Query(Collection.OUTFIT_MEMBER, serviceId).filter("outfit_id", id);
         return q.count();
     }
 
-    public static String getOutfitMemberRankById(String id) throws CensusInvalidSearchTermException, IOException {
+    public static String getOutfitMemberRankById(String id) throws CensusException, IOException {
         Query q = new Query(Collection.OUTFIT_MEMBER, serviceId).filter(CC.CHARACTER_ID, id).show("rank");
         List<ICensusCollection> list = q.getAndParse();
 
@@ -361,7 +361,7 @@ public class DaybreakApiQuery {
         return ((OutfitMember) list.get(0)).getRank();
     }
 
-    public static String getOutfitMemberRankByName(String name) throws CensusInvalidSearchTermException, IOException {
+    public static String getOutfitMemberRankByName(String name) throws CensusException, IOException {
         Query q = new Query(Collection.CHARACTER, serviceId).filter("name.first_lower", name)
                 .join(new Join(Collection.OUTFIT_MEMBER).show("rank"));
         List<ICensusCollection> list = q.getAndParse();
@@ -379,7 +379,7 @@ public class DaybreakApiQuery {
         return ((OutfitMember) list.get(0)).getRank();
     }
 
-    public static String getOutfitTagOfMember(String name) throws CensusInvalidSearchTermException, IOException {
+    public static String getOutfitTagOfMember(String name) throws CensusException, IOException {
         Query q = new Query(Collection.CHARACTER, serviceId).filter("name.first_lower", name.toLowerCase())
                 .show(CC.CHARACTER_ID)
                 .join(new Join(Collection.OUTFIT_MEMBER_EXTENDED).on(CC.CHARACTER_ID).show("alias"));
@@ -399,7 +399,7 @@ public class DaybreakApiQuery {
     }
 
     public static List<OutfitMember> getOutfitMembersByTag(String outfit_tag, String outfit_rank)
-            throws CensusInvalidSearchTermException, IOException {
+            throws CensusException, IOException {
         Join outfit_members = new Join(Collection.OUTFIT_MEMBER).on("outfit_id").list(1);
         if (outfit_rank != null && !outfit_rank.isEmpty()) {
             outfit_members.terms(new Pair<String, String>("rank", outfit_rank));
@@ -423,7 +423,7 @@ public class DaybreakApiQuery {
     }
 
     public static List<OutfitMember> getOutfitMembersById(String outfit_id, String outfit_rank)
-            throws CensusInvalidSearchTermException, IOException {
+            throws CensusException, IOException {
         Join outfit_members = new Join(Collection.OUTFIT_MEMBER).on("outfit_id").list(1);
         if (outfit_rank != null && !outfit_rank.isEmpty()) {
             outfit_members.terms(new Pair<String, String>("rank", outfit_rank));
@@ -447,7 +447,7 @@ public class DaybreakApiQuery {
     }
 
     public static List<String> getMemberIdsByOutfitId(String outfit_id, String outfit_rank)
-            throws CensusInvalidSearchTermException, IOException {
+            throws CensusException, IOException {
         Join outfit_members = new Join(Collection.OUTFIT_MEMBER).on("outfit_id").list(1).show(CC.CHARACTER_ID);
         if (outfit_rank != null && !outfit_rank.isEmpty()) {
             outfit_members.terms(new Pair<String, String>("rank", outfit_rank));
@@ -471,7 +471,7 @@ public class DaybreakApiQuery {
     }
 
     public static stinkybot.utils.daybreakutils.enums.World getOutfitWorldById(String id)
-            throws CensusInvalidSearchTermException, IOException {
+            throws CensusException, IOException {
         Query q = new Query(Collection.OUTFIT_MEMBER, serviceId).filter("outfit_id", id).show(CC.CHARACTER_ID)
                 .join(new Join(Collection.CHARACTERS_WORLD).on(CC.CHARACTER_ID).show("world_id"));
 
@@ -491,7 +491,7 @@ public class DaybreakApiQuery {
     }
 
     public static stinkybot.utils.daybreakutils.enums.Faction getCharacterFactionByName(String name)
-            throws CensusInvalidSearchTermException, IOException {
+            throws CensusException, IOException {
         Query q = new Query(Collection.CHARACTER, serviceId).filter("name.first_lower", name.toLowerCase())
                 .show("faction_id");
 
@@ -512,7 +512,7 @@ public class DaybreakApiQuery {
      * @return data
      */
     public static List<CharacterName> getCharacterNamesByIds(String[] ids)
-            throws CensusInvalidSearchTermException, IOException {
+            throws CensusException, IOException {
         Query q = new Query(Collection.CHARACTER_NAME, serviceId)
                 .filter(CC.CHARACTER_ID, ids)
                 .show(CC.CHARACTER_ID, CC.NAME)
@@ -528,7 +528,7 @@ public class DaybreakApiQuery {
     }
 
     public static List<CharacterName> getCharacterNamesByName(String[] names)
-            throws CensusInvalidSearchTermException, IOException {
+            throws CensusException, IOException {
 
         Query q = new Query(Collection.CHARACTER_NAME, serviceId)
                 .filter("name.first_lower", names)
@@ -545,7 +545,7 @@ public class DaybreakApiQuery {
     }
 
     public static stinkybot.utils.daybreakutils.enums.Faction getOutfitFactionByTag(String tag)
-            throws CensusInvalidSearchTermException, IOException {
+            throws CensusException, IOException {
         Query q = new Query(Collection.OUTFIT_MEMBER_EXTENDED, serviceId).filter("alias_lower", tag.toLowerCase())
                 .show(CC.CHARACTER_ID).join(new Join(Collection.CHARACTER).on(CC.CHARACTER_ID).show("faction_id"));
 
@@ -564,7 +564,7 @@ public class DaybreakApiQuery {
     }
 
     public static stinkybot.utils.daybreakutils.enums.Faction getOutfitFactionById(String id)
-            throws CensusInvalidSearchTermException, IOException {
+            throws CensusException, IOException {
         Query q = new Query(Collection.OUTFIT_MEMBER_EXTENDED, serviceId).filter("outfit_id", id).show(CC.CHARACTER_ID)
                 .join(new Join(Collection.CHARACTER).on(CC.CHARACTER_ID).show("faction_id"));
 
@@ -583,7 +583,7 @@ public class DaybreakApiQuery {
     }
 
     public static OutfitMemberExtended getOutfitMemberById(String id)
-            throws CensusInvalidSearchTermException, IOException {
+            throws CensusException, IOException {
         Query q = new Query(Collection.OUTFIT_MEMBER_EXTENDED, serviceId).filter(CC.CHARACTER_ID, id);
 
         List<ICensusCollection> list = q.getAndParse();
@@ -595,7 +595,7 @@ public class DaybreakApiQuery {
         return (OutfitMemberExtended) list;
     }
 
-    public static List<OutfitMember> getOutfitMembersByOutfitId(String id) throws IOException, CensusInvalidSearchTermException {
+    public static List<OutfitMember> getOutfitMembersByOutfitId(String id) throws IOException, CensusException {
         List<ICensusCollection> list = new Query(Collection.OUTFIT_MEMBER, serviceId)
                 .filter("outfit_id", id)
                 .limit(1000)
@@ -611,7 +611,7 @@ public class DaybreakApiQuery {
         return list1;
     }
 
-    public static String[] getCharacterIdsFromOutfitTag(String tag) throws IOException, CensusInvalidSearchTermException {
+    public static String[] getCharacterIdsFromOutfitTag(String tag) throws IOException, CensusException {
         Outfit outfit = getOutfitByTag(tag.toLowerCase());
 
         if (outfit == null) {
@@ -628,7 +628,7 @@ public class DaybreakApiQuery {
                 .map(OutfitMember::getCharacter_id).toArray(String[]::new);
     }
 
-    public static MapRegion getRegionByFacilityId(String id) throws CensusInvalidSearchTermException, IOException {
+    public static MapRegion getRegionByFacilityId(String id) throws CensusException, IOException {
         Query q = new Query(Collection.MAP_REGION, serviceId).filter("facility_id", id);
 
         List<ICensusCollection> list = q.getAndParse();
@@ -640,7 +640,7 @@ public class DaybreakApiQuery {
         return (MapRegion) list.get(0);
     }
 
-    public static MetagameEvent getAlertById(String id) throws CensusInvalidSearchTermException, IOException {
+    public static MetagameEvent getAlertById(String id) throws CensusException, IOException {
         Query q = new Query(Collection.METAGAME_EVENT, serviceId).filter("metagame_event_id", id);
 
         List<ICensusCollection> list = q.getAndParse();
@@ -652,7 +652,7 @@ public class DaybreakApiQuery {
         return (MetagameEvent) list.get(0);
     }
 
-    public static MetagameEventState getAlertStateById(String id) throws CensusInvalidSearchTermException, IOException {
+    public static MetagameEventState getAlertStateById(String id) throws CensusException, IOException {
         Query q = new Query(Collection.ZONE, serviceId).filter("metagame_event_state_id", id);
 
         List<ICensusCollection> list = q.getAndParse();
@@ -665,7 +665,7 @@ public class DaybreakApiQuery {
     }
 
     public static DeathVehicleKillMapper getDeathVehicleDestroyEventInfo(List<DeathOrVehiclePayload> events)
-            throws IOException, CensusInvalidSearchTermException {
+            throws IOException, CensusException {
         Set<String> charIds = new HashSet<>();
         Set<String> loadOutIds = new HashSet<>();
         Set<String> vehicleIds = new HashSet<>();

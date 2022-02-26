@@ -10,7 +10,7 @@ public enum Zone {
 	VR_VS(98, "VR(VS)"),
 	KOLTYR(-1, "Koltyr"),
 	DESOLATION(-1, "Desolation");
-
+	
 	private int id;
 	private String name;
 
@@ -59,7 +59,7 @@ public enum Zone {
 	public static long calcInstanceId(long zone_id) {
 		return (0xFFFF0000 & zone_id) >>> 16;
 	}
-
+	
 	public static long calcZoneId(long instance_id, long definition_id) {
 		return (instance_id << 16) & definition_id;
 	}

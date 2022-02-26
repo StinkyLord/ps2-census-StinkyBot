@@ -17,9 +17,7 @@ import stinkybot.utils.daybreakutils.anatomy.commands.IvIModel;
 import stinkybot.utils.daybreakutils.anatomy.event.GenericCharacter;
 import stinkybot.utils.daybreakutils.event.dto.parsers.DeathOrVehicleDestroy;
 import stinkybot.utils.daybreakutils.event.dto.parsers.DeathOrVehiclePayload;
-import stinkybot.utils.daybreakutils.event.dto.parsers.GainExperiencePayload;
-import stinkybot.utils.daybreakutils.event.dto.parsers.LogInOrLogOutPayload;
-import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
+import stinkybot.utils.daybreakutils.exception.CensusException;
 import stinkybot.utils.daybreakutils.query.dto.internal.*;
 import stinkybot.utils.daybreakutils.query.dto.internal.Character;
 import stinkybot.utils.daybreakutils.enums.Faction;
@@ -46,7 +44,7 @@ public class AppTest {
 
     @Ignore
     @Test
-    public void shouldAnswerWithTrue() throws IOException, CensusInvalidSearchTermException {
+    public void shouldAnswerWithTrue() throws IOException, CensusException {
 
 //        List<String> members = DaybreakApiQuery.getCharacterIdsFromOutfitTag("BRTD");
         String session = "philipTest2";
@@ -295,7 +293,7 @@ public class AppTest {
 //        eb.build();
     @Ignore
     @Test
-    public void iviTest() throws IOException, CensusInvalidSearchTermException {
+    public void iviTest() throws IOException, CensusException {
 //        DaybreakApiEvents.syncReconnect();
 //        DaybreakApiEvents.asyncPrintAll();
 
@@ -377,7 +375,7 @@ public class AppTest {
     }
 
     @Test
-    public void check() throws IOException, CensusInvalidSearchTermException {
+    public void check() throws IOException, CensusException {
         DaybreakApiQuery.getPlayerByName("stinkybullet");
     }
 }

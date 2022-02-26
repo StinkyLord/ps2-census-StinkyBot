@@ -2,14 +2,13 @@ package stinkybot.commandlisteners;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 import stinkybot.apiQuery.DaybreakApiQuery;
 import stinkybot.commandlisteners.utilities.CommandAnnotation;
 import stinkybot.commandlisteners.utilities.CommandInterface;
 import stinkybot.commandlisteners.utilities.Utils;
 import stinkybot.utils.SqlConnector;
-import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
+import stinkybot.utils.daybreakutils.exception.CensusException;
 import stinkybot.utils.daybreakutils.query.dto.internal.CharacterName;
 
 import java.io.File;
@@ -102,7 +101,7 @@ public class CommandControlData implements CommandInterface {
         return sql.selectAllNamesFromTrackedList();
     }
 
-    private String removeOutfitMembers(String outfitNameRmv) throws IOException, CensusInvalidSearchTermException {
+    private String removeOutfitMembers(String outfitNameRmv) throws IOException, CensusException {
         List<CharacterName> characterNames = getOutfitMembers(outfitNameRmv);
         if (characterNames == null) {
             return "Error occurred, outfit not found";
@@ -132,7 +131,7 @@ public class CommandControlData implements CommandInterface {
         return sql.updateQuery("DELETE FROM trackedlist WHERE name in " + valuesQuery);
     }
 
-    private String addMembers(String[] playersToAdd) throws IOException, CensusInvalidSearchTermException {
+    private String addMembers(String[] playersToAdd) throws IOException, CensusException {
         String[] list = Arrays.stream(playersToAdd)
                 .map(String::toLowerCase)
                 .toArray(String[]::new);
@@ -143,7 +142,7 @@ public class CommandControlData implements CommandInterface {
         return convertDataAndInsertToTrackedList(characterNames);
     }
 
-    private String addOutfitMembers(String outfitNameAdd) throws IOException, CensusInvalidSearchTermException {
+    private String addOutfitMembers(String outfitNameAdd) throws IOException, CensusException {
         List<CharacterName> characterNames = getOutfitMembers(outfitNameAdd);
         if (characterNames == null) {
             return "Error occurred, outfit not found";
@@ -158,7 +157,7 @@ public class CommandControlData implements CommandInterface {
 
 
     @Nullable
-    private List<CharacterName> getOutfitMembers(String outfitNameAdd) throws IOException, CensusInvalidSearchTermException {
+    private List<CharacterName> getOutfitMembers(String outfitNameAdd) throws IOException, CensusException {
         String[] allCharIds = DaybreakApiQuery.getCharacterIdsFromOutfitTag(outfitNameAdd);
         if (allCharIds == null) {
             return null;

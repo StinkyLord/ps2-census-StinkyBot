@@ -9,7 +9,7 @@ import stinkybot.apiQuery.DaybreakApiQuery;
 import stinkybot.commandlisteners.utilities.CC;
 import stinkybot.commandlisteners.utilities.CommandAnnotation;
 import stinkybot.commandlisteners.utilities.CommandInterface;
-import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
+import stinkybot.utils.daybreakutils.exception.CensusException;
 import stinkybot.utils.daybreakutils.query.dto.internal.Character;
 import stinkybot.utils.daybreakutils.query.dto.util.BattleRank;
 import stinkybot.utils.daybreakutils.query.dto.util.Times;
@@ -50,7 +50,7 @@ public class CommandStats implements CommandInterface {
         }
     }
 
-    private EmbedBuilder getDaybreakInfo(String playerName) throws IOException, CensusInvalidSearchTermException {
+    private EmbedBuilder getDaybreakInfo(String playerName) throws IOException, CensusException {
         Character character = DaybreakApiQuery.getCharacterStatistics(playerName);
         if (character == null) {
             return null;

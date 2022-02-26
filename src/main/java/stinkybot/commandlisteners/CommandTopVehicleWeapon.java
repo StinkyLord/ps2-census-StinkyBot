@@ -10,7 +10,7 @@ import stinkybot.commandlisteners.utilities.CommandInterface;
 import stinkybot.utils.JoinImage;
 import stinkybot.utils.QueryConstants;
 import stinkybot.utils.daybreakutils.anatomy.Constants;
-import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
+import stinkybot.utils.daybreakutils.exception.CensusException;
 import stinkybot.utils.daybreakutils.query.dto.ICensusCollection;
 import stinkybot.utils.daybreakutils.query.dto.internal.CharactersWeaponStat;
 import stinkybot.utils.daybreakutils.query.dto.internal.CharactersWeaponStatByFaction;
@@ -67,7 +67,7 @@ public class CommandTopVehicleWeapon implements CommandInterface {
     }
 
 
-    public EmbedBuilder getDaybreakInfo(String[] args) throws IOException, CensusInvalidSearchTermException {
+    public EmbedBuilder getDaybreakInfo(String[] args) throws IOException, CensusException {
         String playerName2 = args[1];
 
         CharactersWeaponStat weaponScore = DaybreakApiQuery.getPlayerTopVehicleWeaponKillsByName(playerName2);

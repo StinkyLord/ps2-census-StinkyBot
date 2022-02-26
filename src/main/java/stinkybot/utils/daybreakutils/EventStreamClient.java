@@ -3,6 +3,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Set;
 
+import stinkybot.utils.daybreakutils.logging.LoggingConstants;
 import org.jetbrains.annotations.Nullable;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,6 +20,8 @@ import stinkybot.utils.daybreakutils.event.listener.GenericEventPrinter;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.WebSocket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -68,6 +71,8 @@ import okhttp3.WebSocket;
  * @author LuiZiffer
  */
 public final class EventStreamClient implements Closeable {
+
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	private static EventStreamClient instance;
 	private EventStreamHandler handler;
@@ -138,8 +143,7 @@ public final class EventStreamClient implements Closeable {
 			wait();
 			//System.out.println("Finished waiting");
 		} catch (InterruptedException e) {
-			//System.out.println("Wait has been interrupted");
-			e.printStackTrace();
+			logger.error(LoggingConstants.censusEvent, "CLIENT: awaitConnection(...) has been interrupted.", e);
 			Thread.interrupted();
 			handler.onException(e);
 		}
@@ -216,32 +220,34 @@ public final class EventStreamClient implements Closeable {
 		if (webSocket == null) {
 			connect();
 			try {
+				logger.debug(LoggingConstants.censusEvent, "CLIENT: Send subscription message");
 				return sendMessage(backupBuilder.build());
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error(LoggingConstants.censusEvent,
+						"CLIENT: An error has occurred while attempting to resume.", e);
 			}
 		}
 		return false;
 	}
-
+	
 	/**
 	 * (Synchronous) Resets the connection and resends the subscription message
 	 * @return true if the reset was successful
 	 * @throws IOException
 	 */
 	public synchronized boolean resetConnection() throws IOException {
+		logger.debug(LoggingConstants.censusEvent, "CLIENT: Resetting connection");
 		if (webSocket == null) {
 			handler.resume();
 		} else {
 			cancel();
 			client.connectionPool().evictAll();
-			//System.out.println("Websocket: " + webSocket);
 		}
 
 		return resume();
 	}
 
-
+	
 	synchronized void resetWaiting() {
 		this.isWaiting = false;
 	}
@@ -439,7 +445,7 @@ public final class EventStreamClient implements Closeable {
 	public boolean isConnected() {
 		return webSocket != null;
 	}
-
+	
 	/**
 	 *
 	 * @return number of missed heartbeats

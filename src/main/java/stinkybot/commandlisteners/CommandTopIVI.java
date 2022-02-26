@@ -2,14 +2,13 @@ package stinkybot.commandlisteners;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import stinkybot.apiQuery.DaybreakApiQuery;
 import stinkybot.commandlisteners.utilities.CommandAnnotation;
 import stinkybot.commandlisteners.utilities.CommandInterface;
 import stinkybot.utils.daybreakutils.anatomy.commands.IvIModel;
-import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
+import stinkybot.utils.daybreakutils.exception.CensusException;
 import stinkybot.utils.daybreakutils.query.dto.internal.CharactersWeaponStat;
 import stinkybot.utils.daybreakutils.query.dto.internal.CharactersWeaponStatByFaction;
 import stinkybot.utils.daybreakutils.query.dto.internal.Item;
@@ -52,7 +51,7 @@ public class CommandTopIVI implements CommandInterface {
         }
     }
 
-    private EmbedBuilder getDaybreakInfo(String name) throws IOException, CensusInvalidSearchTermException {
+    private EmbedBuilder getDaybreakInfo(String name) throws IOException, CensusException {
         Map<String, IvIModel> models = new HashMap<>();
         String id = DaybreakApiQuery.getPlayerIdByName(name);
         List<CharactersWeaponStatByFaction> headshotRateRes = DaybreakApiQuery.getWeaponsHeadshotRateByChar(id);

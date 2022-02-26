@@ -8,7 +8,7 @@ import stinkybot.apiQuery.DaybreakApiQuery;
 import stinkybot.commandlisteners.utilities.CommandAnnotation;
 import stinkybot.commandlisteners.utilities.CommandInterface;
 import stinkybot.utils.daybreakutils.anatomy.Constants;
-import stinkybot.utils.daybreakutils.exception.CensusInvalidSearchTermException;
+import stinkybot.utils.daybreakutils.exception.CensusException;
 import stinkybot.utils.daybreakutils.query.dto.ICensusCollection;
 import stinkybot.utils.daybreakutils.query.dto.internal.*;
 
@@ -46,7 +46,7 @@ public class CommandDirectiveScore implements CommandInterface {
         }
     }
 
-    private EmbedBuilder getDaybreakInfo(String playerName) throws IOException, CensusInvalidSearchTermException {
+    private EmbedBuilder getDaybreakInfo(String playerName) throws IOException, CensusException {
         List<CharactersDirectiveTree> charDirectiveTree = DaybreakApiQuery.getDirectiveTreeByCharacterName(playerName);
         if (charDirectiveTree == null) {
             return null;
