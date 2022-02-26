@@ -1,7 +1,6 @@
 package stinkybot.commandlisteners;
 
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
@@ -15,9 +14,9 @@ import stinkybot.utils.daybreakutils.query.dto.internal.CharacterName;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @CommandAnnotation
@@ -36,18 +35,24 @@ public class CommandControlData implements CommandInterface {
     public void run(GuildMessageReceivedEvent event, String[] args) {
         try {
             Member member = event.getMember();
-            List<Role> roles;
+//            List<Role> roles;
             if (member == null) {
                 return;
             }
-            roles = member.getRoles();
-            boolean access = roles.stream().anyMatch(role -> role.getName().equals("Bot Master"));
-            if (!access) {
-                event.getChannel().sendMessage("Only Bot Masters are allowed to run this command.").queue();
+//            roles = member.getRoles();
+//            boolean access = roles.stream().anyMatch(role -> role.getName().equals("Bot Master"));
+//            if (!access) {
+//                event.getChannel().sendMessage("Only Bot Masters are allowed to run this command.").queue();
+//                return;
+//            }
+
+            String nickName = member.getEffectiveName();
+            if (!nickName.equals("StinkyBullet")) {
+                event.getChannel().sendMessage("Still under construction").queue();
                 return;
             }
 
-            if (args.length < 3) {
+            if (args.length < 2) {
                 event.getChannel().sendMessage("usage: ~track [command] [characters]").queue();
                 return;
             }
@@ -78,8 +83,7 @@ public class CommandControlData implements CommandInterface {
                     String filePath = Utils.writeListToFile(trackedList);
                     File file = new File(filePath);
                     event.getChannel().sendFile(file).queue();
-                    TimeUnit.SECONDS.sleep(5);
-                    FileUtils.forceDeleteOnExit(file);
+                    Files.deleteIfExists(file.toPath());
                     break;
                 case "clear":
                     String msg6 = clearList();

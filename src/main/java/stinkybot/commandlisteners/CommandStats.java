@@ -64,6 +64,9 @@ public class CommandStats implements CommandInterface {
         for (Map<String, Object> tree : directiveTree) {
             for (int i = 1; i < Integer.parseInt((String) tree.get(CC.CURRENT_DIRECTIVE_TIER_ID)); i++) {
                 List<Map<String, String>> tier = (List<Map<String, String>>) tree.get(CC.TIER);
+                if(tier == null){
+                    continue;
+                }
                 for (Map<String, String> tierTemp : tier) {
                     if (tierTemp.get(CC.DIRECTIVE_TIER_ID).equals(String.valueOf(i))) {
                         directiveScore += Integer.parseInt(tierTemp.get(CC.DIRECTIVE_POINTS));

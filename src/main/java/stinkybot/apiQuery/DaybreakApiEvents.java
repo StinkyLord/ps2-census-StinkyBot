@@ -71,7 +71,7 @@ public class DaybreakApiEvents {
                             CharacterEvent.PLAYER_LOGIN, CharacterEvent.PLAYER_LOGOUT)
                     .build());
             try {
-                TimeUnit.SECONDS.sleep(recordMin);
+                TimeUnit.MINUTES.sleep(recordMin);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 Thread.interrupted();

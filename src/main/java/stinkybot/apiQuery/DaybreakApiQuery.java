@@ -52,7 +52,7 @@ public class DaybreakApiQuery {
                 .filter(CC.CHARACTER_ID, characterId)
                 .filter("stat_name", "weapon_score")
                 .filter(CC.ITEM_ID, SearchModifier.NOT, "0", "650", "432", "44605", "429", "800623", "1095"
-                        , "881", "6008686", "50560", "34002", "85", "16031", "804652", "804179")
+                        , "881", "6008686", "50560", "34002", "85", "16031", "804652", "804179", "804939")
                 .filter("vehicle_id", "0")
                 .sort(new Pair<>("value", -1))
                 .join(new Join(Collection.ITEM).on(CC.ITEM_ID))
@@ -737,8 +737,8 @@ public class DaybreakApiQuery {
             }
             charMap.putAll(
                     charsList.stream().collect(Collectors.toMap(
-                    character -> ((Character) character).getCharacter_id(),
-                    character -> (Character) character))
+                            character -> ((Character) character).getCharacter_id(),
+                            character -> (Character) character))
             );
         }
         DeathVehicleKillMapper deathVehicleKillMapper = new DeathVehicleKillMapper();
@@ -769,7 +769,7 @@ public class DaybreakApiQuery {
                 weaponList.stream().collect(Collectors.toMap(
                         weapon -> ((Item) weapon).getItem_id(),
                         weapon -> ((Item) weapon).getName().getEn())
-        ));
+                ));
 
 //        deathVehicleKillMapper.setWeapons(
 //                weaponList.stream().collect(Collectors.toMap(

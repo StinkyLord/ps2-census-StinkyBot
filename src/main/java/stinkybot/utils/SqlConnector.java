@@ -65,7 +65,7 @@ public class SqlConnector {
     public List<String> selectAllCharacterIdsFromTrackedList() {
         List<String> list = new LinkedList<>();
         try (Connection conn = DriverManager.getConnection(sqlUrl, sqlUser, sqlPass);
-             PreparedStatement ps = conn.prepareStatement("SELECT name FROM trackedlist")) {
+             PreparedStatement ps = conn.prepareStatement("SELECT name,characterid FROM trackedlist")) {
             ResultSet resultSet = ps.executeQuery();
             while (resultSet.next()) {
                 String charid = resultSet.getString("characterid");
